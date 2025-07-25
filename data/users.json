@@ -1,0 +1,6 @@
+[
+  {"id": 1, "name": "Taquarada", "email": "taquarada@example.com", "password": "rex123", "isAdmin": false},
+  {"id": 2, "name": "China", "email": "china@example.com", "password": "china123", "isAdmin": false},
+  {"id": 3, "name": "Professor Ghedin", "email": "ghedin@example.com", "password": "ghedin123", "isAdmin": false},
+  {"id": 4, "name": "Administrador", "email": "taquararaiz", "password": "dtaquara2025", "isAdmin": true}
+]

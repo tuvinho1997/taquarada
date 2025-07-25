@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Resultados - Debate Taquara Raiz</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+  function toggleRound(id) {
+    const elem = document.getElementById('round-body-'+id);
+    if (elem.style.display === 'block') {
+      elem.style.display = 'none';
+    } else {
+      elem.style.display = 'block';
+    }
+  }
+  </script>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/static/taquarada_logo.png" alt="Portal Taquarada">
+      <img src="/static/boneco.png" alt="Boneco Taquarada">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="/">Classificação</a></li>
+        <li><a href="/palpites">Palpites</a></li>
+        <li><a href="/ranking">Ranking</a></li>
+        <li><a href="/resultados" class="active">Resultados</a></li>
+        <li><a href="/artilharia">Artilharia</a></li>
+        {{admin_link}}
+        {{auth_link}}
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h2>Histórico de Resultados</h2>
+    {{round_sections}}
+  </main>
+  <footer>
+    <p>&copy; 2025 Debate Taquara Raiz</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Ranking - Debate Taquara Raiz</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+  // Expand/collapse ranking cards
+  function toggleCard(id) {
+    const body = document.getElementById('card-body-'+id);
+    if (body.style.display === 'block') {
+      body.style.display = 'none';
+    } else {
+      body.style.display = 'block';
+    }
+  }
+  </script>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/static/taquarada_logo.png" alt="Portal Taquarada">
+      <img src="/static/boneco.png" alt="Boneco Taquarada">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="/">Classificação</a></li>
+        <li><a href="/palpites">Palpites</a></li>
+        <li><a href="/ranking" class="active">Ranking</a></li>
+        <li><a href="/resultados">Resultados</a></li>
+        <li><a href="/artilharia">Artilharia</a></li>
+        {{admin_link}}
+        {{auth_link}}
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h2>Ranking de Apresentadores</h2>
+    <p>O ranking é calculado da seguinte forma: 3 pontos para placar exato, 1 ponto para resultado correto e 0 ponto para erro.</p>
+    <!-- Seletor de rodada: permite ver o ranking geral ou por rodada -->
+    {{round_selector}}
+    {{ranking_cards}}
+  </main>
+  <footer>
+    <p>&copy; 2025 Debate Taquara Raiz</p>
+  </footer>
+</body>
+</html>

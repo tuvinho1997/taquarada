@@ -1,0 +1,22 @@
+[
+  {"id": 1, "name": "Goiás", "abbr": "GOI", "highlight": false},
+  {"id": 2, "name": "Coritiba", "abbr": "CFC", "highlight": false},
+  {"id": 3, "name": "Novorizontino", "abbr": "NOV", "highlight": false},
+  {"id": 4, "name": "Chapecoense", "abbr": "CHA", "highlight": false},
+  {"id": 5, "name": "Cuiabá", "abbr": "CUI", "highlight": false},
+  {"id": 6, "name": "Vila Nova", "abbr": "VNO", "highlight": false},
+  {"id": 7, "name": "Remo", "abbr": "REM", "highlight": false},
+  {"id": 8, "name": "Avaí", "abbr": "AVA", "highlight": false},
+  {"id": 9, "name": "Athletico Paranaense", "abbr": "CAP", "highlight": false},
+  {"id": 10, "name": "Criciúma", "abbr": "CRI", "highlight": true},
+  {"id": 11, "name": "Athletic", "abbr": "ATH", "highlight": false},
+  {"id": 12, "name": "Operário-PR", "abbr": "OPE", "highlight": false},
+  {"id": 13, "name": "CRB", "abbr": "CRB", "highlight": false},
+  {"id": 14, "name": "Atlético Goianiense", "abbr": "ACG", "highlight": false},
+  {"id": 15, "name": "América Mineiro", "abbr": "AME", "highlight": false},
+  {"id": 16, "name": "Paysandu", "abbr": "PAY", "highlight": false},
+  {"id": 17, "name": "Ferroviária", "abbr": "FER", "highlight": false},
+  {"id": 18, "name": "Volta Redonda", "abbr": "VOL", "highlight": false},
+  {"id": 19, "name": "Botafogo-SP", "abbr": "BFC", "highlight": false},
+  {"id": 20, "name": "Amazonas", "abbr": "AMA", "highlight": false}
+]

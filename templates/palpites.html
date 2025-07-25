@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Palpites - Debate Taquara Raiz | Criciúma EC</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <meta name="description" content="Faça seus palpites para os jogos da Série B 2025. Portal Taquarada - sempre com o Criciúma EC!">
+  <link rel="icon" type="image/png" href="/static/team_logos/cri.png">
+  <script>
+  function updateResult(userId, matchId) {
+    const homeInput = document.getElementById('home_' + userId + '_' + matchId);
+    const awayInput = document.getElementById('away_' + userId + '_' + matchId);
+    const resultField = document.getElementById('result_' + userId + '_' + matchId);
+    const h = parseInt(homeInput.value);
+    const a = parseInt(awayInput.value);
+    if (!isNaN(h) && !isNaN(a)) {
+      if (h > a) resultField.textContent = 'Casa';
+      else if (h < a) resultField.textContent = 'Fora';
+      else resultField.textContent = 'Empate';
+    } else {
+      resultField.textContent = '-';
+    }
+  }
+  </script>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/static/taquarada_logo.png" alt="Portal Taquarada">
+      <img src="/static/boneco.png" alt="Boneco Taquarada">
+      <h1>Taquarada</h1>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="/">Classificação</a></li>
+        <li><a href="/palpites" class="active">Palpites</a></li>
+        <li><a href="/ranking">Ranking</a></li>
+        <li><a href="/resultados">Resultados</a></li>
+        <li><a href="/artilharia">Artilharia</a></li>
+        {{admin_link}}
+        <li><a href="/logout">Sair ({{user_name}})</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <main>
+    <div class="hero-section">
+      <h2>Palpites da Rodada {{round_number}}</h2>
+      <!-- Logomarca do Criciúma adicionada como elemento decorativo -->
+      <img src="/static/team_logos/cri.png" alt="Criciúma EC" style="width:60px;height:auto;margin:0.5rem auto;display:block;">
+    </div>
+    
+    <div class="info-card">
+      <p><strong>Instruções:</strong> Preencha os palpites para os jogos da rodada abaixo. Para cada jogo, insira o placar de cada apresentador.</p>
+      <p>O campo "Res" indica automaticamente se o palpite aponta vitória do mandante (Casa), empate ou vitória do visitante (Fora).</p>
+    </div>
+    
+    <form class="predictions-form" method="POST" action="/palpites">
+      <div class="table-container">
+        <table>
+          <thead>
+            {{table_head}}
+          </thead>
+          <tbody>
+            {{match_rows}}
+          </tbody>
+        </table>
+      </div>
+      <button type="submit">Salvar Palpites</button>
+    </form>
+    
+    <!-- Mensagem de sucesso é injetada diretamente pelo servidor. -->
+    {{message_html}}
+  </main>
+  
+  <footer>
+    <div class="footer-content">
+      <p>Portal Taquarada - Sempre com o Criciúma EC</p>
+      <p>&copy; 2025 Debate Taquara Raiz</p>
+    </div>
+  </footer>
+</body>
+</html>
+

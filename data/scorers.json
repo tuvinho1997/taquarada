@@ -1,0 +1,14 @@
+[
+  {"rank": 1, "player": "Pedro Rocha", "team_id": 7, "goals": 9},
+  {"rank": 2, "player": "Carlão", "team_id": 17, "goals": 6},
+  {"rank": 3, "player": "Costa Neto", "team_id": 11, "goals": 6},
+  {"rank": 4, "player": "Diego Gonçalves", "team_id": 10, "goals": 5},
+  {"rank": 5, "player": "Josué", "team_id": 2, "goals": 5},
+  {"rank": 6, "player": "Mailton", "team_id": 4, "goals": 5},
+  {"rank": 7, "player": "Marcelinho", "team_id": 14, "goals": 5},
+  {"rank": 8, "player": "Alan Kardec", "team_id": 9, "goals": 5},
+  {"rank": 9, "player": "Anselmo Ramon", "team_id": 1, "goals": 5},
+  {"rank": 10, "player": "Nathan Fogaca", "team_id": 3, "goals": 5},
+  {"rank": 11, "player": "R. Peixoto Nepomuceno", "team_id": 9, "goals": 5},
+  {"rank": 12, "player": "Rodrigo Rodrigues", "team_id": 12, "goals": 5}
+]

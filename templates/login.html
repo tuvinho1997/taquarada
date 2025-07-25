@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Debate Taquara Raiz</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/static/taquarada_logo.png" alt="Portal Taquarada">
+      <img src="/static/boneco.png" alt="Boneco Taquarada">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="/">Classificação</a></li>
+        <li><a href="/palpites">Palpites</a></li>
+        <li><a href="/ranking">Ranking</a></li>
+        <li><a href="/resultados">Resultados</a></li>
+        <li><a href="/artilharia">Artilharia</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <div class="login-container">
+      <h2>Entrar</h2>
+      <form method="POST" action="/login">
+        <input type="text" name="email" placeholder="E-mail" required>
+        <input type="password" name="password" placeholder="Senha" required>
+        <button type="submit">Login</button>
+      </form>
+      <p style="color:red;">{{message}}</p>
+    </div>
+  </main>
+  <footer>
+    <p>&copy; 2025 Debate Taquara Raiz</p>
+  </footer>
+</body>
+</html>

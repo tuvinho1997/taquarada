@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classificação - Debate Taquara Raiz | Criciúma EC</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <meta name="description" content="Acompanhe a classificação da Série B 2025 com foco no Criciúma EC. Portal Taquarada - sua fonte de informações sobre o Tigre!">
+  <link rel="icon" type="image/png" href="/static/team_logos/cri.png">
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/static/taquarada_logo.png" alt="Portal Taquarada">
+      <img src="/static/boneco.png" alt="Boneco Taquarada">
+      <h1>Taquarada</h1>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="/" class="active">Classificação</a></li>
+        <li><a href="/palpites">Palpites</a></li>
+        <li><a href="/ranking">Ranking</a></li>
+        <li><a href="/resultados">Resultados</a></li>
+        <li><a href="/artilharia">Artilharia</a></li>
+        {{admin_link}}
+        {{auth_link}}
+      </ul>
+    </nav>
+  </header>
+  
+  <main>
+    <div class="hero-section">
+      <h2>Classificação Série B 2025</h2>
+      <!-- Logomarca do Criciúma adicionada como elemento decorativo -->
+      <img src="/static/team_logos/cri.png" alt="Criciúma EC" style="width:60px;height:auto;margin:0.5rem auto;display:block;">
+    <div class="stats-cards">
+        <!-- Exibimos apenas a posição do Criciúma; removido o card "20 Times" -->
+        <div class="stat-card highlight">
+          <!-- Removemos o filtro |default para compatibilidade com o motor de templates -->
+          <div class="stat-number">{{criciuma_position}}</div>
+          <div class="stat-label">Posição Criciúma</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="table-container">
+      <table class="classification-table">
+        <thead>
+          <tr>
+            <th>Pos</th>
+            <th>Time</th>
+            <th>Pts</th>
+            <th>J</th>
+            <th>V</th>
+            <th>E</th>
+            <th>D</th>
+            <th>GP</th>
+            <th>GC</th>
+            <th>SG</th>
+            <th>Forma</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{table_rows}}
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="legend-section">
+      <h3>Legendas</h3>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="badge badge-promo">Promoção</span>
+          <span>Quatro primeiras posições - acesso à Série A</span>
+        </div>
+        <div class="legend-item">
+          <span class="badge badge-releg">Rebaixamento</span>
+          <span>Quatro últimas posições - descenso à Série C</span>
+        </div>
+        <div class="legend-item">
+          <span class="highlight-indicator"></span>
+          <span>Linha destacada indica o <strong>Criciúma EC</strong></span>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="footer-content">
+      <p>Atualizado até {{last_update}}.</p>
+      <p>Portal Taquarada - Sempre com o Criciúma EC</p>
+    </div>
+  </footer>
+</body>
+</html>
+

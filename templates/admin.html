@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Debate Taquara Raiz</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/static/taquarada_logo.png" alt="Portal Taquarada">
+      <img src="/static/boneco.png" alt="Boneco Taquarada">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="/">Classificação</a></li>
+        <li><a href="/palpites">Palpites</a></li>
+        <li><a href="/ranking">Ranking</a></li>
+        <li><a href="/resultados">Resultados</a></li>
+        <li><a href="/artilharia">Artilharia</a></li>
+        <li><a href="/admin" class="active">Admin</a></li>
+        <li><a href="/logout">Sair ({{user_name}})</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h2>Gerenciamento de Dados</h2>
+    <section class="admin-form">
+      <h3>Atualizar Resultados de Partidas</h3>
+      <form method="POST" action="/admin/update_matches">
+        <table>
+          <thead>
+            <tr>
+              <th>Partida</th>
+              <th>Data</th>
+              <th>Placar Casa</th>
+              <th>Placar Fora</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{match_rows}}
+          </tbody>
+        </table>
+        <button type="submit">Salvar Resultados</button>
+      </form>
+    </section>
+    <section class="admin-form">
+      <h3>Atualizar Classificação</h3>
+      <form method="POST" action="/admin/update_classification">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Pts</th>
+              <th>J</th>
+              <th>V</th>
+              <th>E</th>
+              <th>D</th>
+              <th>GP</th>
+              <th>GC</th>
+              <th>SG</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{class_rows}}
+          </tbody>
+        </table>
+        <button type="submit">Salvar Classificação</button>
+      </form>
+    </section>
+    <section class="admin-form">
+      <h3>Atualizar Artilharia</h3>
+      <form method="POST" action="/admin/update_scorers">
+        <table>
+          <thead>
+            <tr>
+              <th>Jogador</th>
+              <th>Time</th>
+              <th>Gols</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{scorer_rows}}
+          </tbody>
+        </table>
+        <button type="submit">Salvar Artilharia</button>
+      </form>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 Debate Taquara Raiz</p>
+  </footer>
+</body>
+</html>
