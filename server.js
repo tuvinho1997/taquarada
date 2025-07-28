@@ -1119,7 +1119,7 @@ const server = http.createServer((req, res) => {
 // Start server if run directly
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor iniciado em http://localhost:${PORT}`);
   });
 }
