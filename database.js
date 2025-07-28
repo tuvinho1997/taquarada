@@ -120,7 +120,7 @@ function updateMatchScore(matchId, homeScore, awayScore) {
   });
 }
 
-// Consulta todos os palpites teste
+// Consulta todos os palpites teste 123
 function getPredictions() {
   return new Promise((resolve, reject) => {
     db.all('SELECT id, match_id, user_id, home_score, away_score FROM predictions', [], (err, rows) => {
