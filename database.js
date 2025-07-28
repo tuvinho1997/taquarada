@@ -8,7 +8,6 @@ const crypto = require('crypto');
 // assíncronas para consultar e manipular registros no SQLite. Atualmente
 // apenas algumas rotas utilizam essas funções diretamente; a refatoração
 // completa para o banco pode ser feita posteriormente.
-const dbAccess = require('./database');
 
 // IDs de partidas que não devem ser considerados em palpites e ranking. Estes
 // jogos permanecem no histórico de resultados, mas não devem aparecer na
@@ -173,6 +172,26 @@ function computeTeamForm(teamId, matches) {
     const db = new Date(b.date);
     return db - da;
   });
+  
+  const form = [];
+  // Determine result from the perspective of the team
+  finished.slice(0, 5).forEach(m => {
+    let result;
+    if (m.home_team_id === teamId) {
+      if (m.home_score > m.away_score) result = 'V';
+      else if (m.home_score < m.away_score) result = 'D';
+      else result = 'E';
+    } else {
+      // team played as visitor
+      if (m.away_score > m.home_score) result = 'V';
+      else if (m.away_score < m.home_score) result = 'D';
+      else result = 'E';
+    }
+    form.push(result);
+  });
+  // Fill remaining positions with dash
+  while (form.length < 5) form.push('-');
+  return form;
 }
 
 // Obtém informações de um time específico
@@ -289,25 +308,18 @@ function upsertPrediction(prediction) {
           else resolve();
         }
       );
-  const form = [];
-  // Determine result from the perspective of the team
-  finished.slice(0, 5).forEach(m => {
-    let result;
-    if (m.home_team_id === teamId) {
-      if (m.home_score > m.away_score) result = 'V';
-      else if (m.home_score < m.away_score) result = 'D';
-      else result = 'E';
     } else {
-      // team played as visitor
-      if (m.away_score > m.home_score) result = 'V';
-      else if (m.away_score < m.home_score) result = 'D';
-      else result = 'E';
+      // Atualiza linha existente
+      db.run(
+        'UPDATE predictions SET home_score = ?, away_score = ? WHERE id = ?',
+        [home_score, away_score, id],
+        function (err) {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
     }
-    form.push(result);
   });
-  // Fill remaining positions with dash
-  while (form.length < 5) form.push('-');
-  return form;
 }
 
 // Determine result sign: returns 'home', 'draw', 'away'
@@ -1242,4 +1254,66 @@ if (require.main === module) {
   });
 }
 
-module.exports = server;
+// Exporta as funções de acesso ao banco de dados
+const dbAccess = {
+  getUserByCredentials: function(email, password) {
+    return new Promise((resolve, reject) => {
+      const data = loadData();
+      const user = data.users.find(u => u.email === email && u.password === password);
+      resolve(user || null);
+    });
+  },
+  
+  getPredictions: function() {
+    return new Promise((resolve, reject) => {
+      const data = loadData();
+      resolve(data.predictions);
+    });
+  },
+  
+  getPredictionsByRound: function(round) {
+    return new Promise((resolve, reject) => {
+      const data = loadData();
+      const roundMatches = data.matches.filter(m => m.round === round);
+      const predictions = data.predictions.filter(p => 
+        roundMatches.some(m => m.id === p.match_id)
+      );
+      resolve(predictions);
+    });
+  },
+  
+  savePredictionsForRound: function(round, userId, predictions) {
+    return new Promise((resolve, reject) => {
+      const data = loadData();
+      // Remove palpites existentes do usuário para esta rodada
+      const roundMatches = data.matches.filter(m => m.round === round);
+      data.predictions = data.predictions.filter(p => 
+        !(p.user_id === userId && roundMatches.some(m => m.id === p.match_id))
+      );
+      
+      // Adiciona novos palpites
+      let maxId = 0;
+      data.predictions.forEach(p => { if (p.id > maxId) maxId = p.id; });
+      
+      predictions.forEach(pred => {
+        maxId += 1;
+        data.predictions.push({
+          id: maxId,
+          match_id: pred.match_id,
+          user_id: userId,
+          home_score: pred.home_score,
+          away_score: pred.away_score
+        });
+      });
+      
+      writeJSON('predictions.json', data.predictions);
+      resolve();
+    });
+  }
+};
+
+// Exporta tanto o servidor quanto as funções de acesso ao banco
+module.exports = {
+  server: server,
+  ...dbAccess
+};
