@@ -217,12 +217,10 @@ function buildNavLinks(user) {
 
 function handleHome(req, res, user) {
   const data = loadData();
-  // Sort classification by points desc, goal difference, goals for
-  const sorted = [...data.classification].sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.goal_diff !== a.goal_diff) return b.goal_diff - a.goal_diff;
-    return b.goals_for - a.goals_for;
-  });
+  // Não reordena a classificação: usa a ordem fornecida pelo arquivo de dados (scrap).
+  // Isso preserva exatamente a colocação dos times conforme definido externamente,
+  // em vez de aplicar critérios de desempate aqui.
+  const sorted = data.classification;
   // Build table rows
   let rows = '';
   sorted.forEach((entry, index) => {
@@ -769,44 +767,77 @@ function handleRanking(req, res, user) {
 
 function handleResultados(req, res, user) {
   const data = loadData();
-  // Agrupa partidas por rodada (somente rodadas finalizadas, com placares conhecidos)
+  // Agrupa partidas por rodada, incluindo jogos sem placar definido. Isso
+  // garante que partidas pendentes de resultado também sejam exibidas.
   const rounds = {};
   data.matches.forEach(match => {
-    if (match.home_score !== null && match.away_score !== null) {
-      if (!rounds[match.round]) rounds[match.round] = [];
-      rounds[match.round].push(match);
-    }
+    if (!rounds[match.round]) rounds[match.round] = [];
+    rounds[match.round].push(match);
   });
-  const sortedRounds = Object.keys(rounds).map(r => parseInt(r)).sort((a, b) => b - a);
+  const sortedRounds = Object.keys(rounds)
+    .map(r => parseInt(r))
+    .sort((a, b) => b - a);
   // Busca todos os palpites do banco
-  dbAccess.getPredictions()
+  dbAccess
+    .getPredictions()
     .then(predsFromDB => {
       let sectionsHtml = '';
       sortedRounds.forEach(r => {
         const matchesInRound = rounds[r];
         const presenters = data.users.filter(u => !u.isAdmin);
-        let tableHead = '<tr><th>Confronto</th><th>Placar</th>';
+        let tableHead =
+          '<tr><th>Confronto</th><th>Placar</th>';
         presenters.forEach(p => {
           tableHead += `<th>${p.name}</th>`;
         });
         tableHead += '</tr>';
         let tableRows = '';
         matchesInRound.forEach(match => {
-          const homeTeam = data.teams.find(t => t.id === match.home_team_id);
-          const awayTeam = data.teams.find(t => t.id === match.away_team_id);
-        // Representa as equipes com pontos coloridos nas linhas de resultados
-        const homeDot = getTeamDot(homeTeam, true);
-        const awayDot = getTeamDot(awayTeam, true);
-        let row = `<tr><td>${homeDot} ${homeTeam.name} x ${awayDot} ${awayTeam.name}</td><td>${match.home_score}-${match.away_score}</td>`;
+          const homeTeam = data.teams.find(
+            t => t.id === match.home_team_id
+          );
+          const awayTeam = data.teams.find(
+            t => t.id === match.away_team_id
+          );
+          // Representa as equipes com pontos coloridos nas linhas de resultados
+          const homeDot = getTeamDot(homeTeam, true);
+          const awayDot = getTeamDot(awayTeam, true);
+          // Exibe o placar se houver resultado; caso contrário, mostra hífen
+          const scoreDisplay =
+            match.home_score !== null && match.away_score !== null
+              ? `${match.home_score}-${match.away_score}`
+              : '-';
+          let row = `<tr><td>${homeDot} ${homeTeam.name} x ${awayDot} ${awayTeam.name}</td><td>${scoreDisplay}</td>`;
           presenters.forEach(p => {
-            const pred = predsFromDB.find(pr => pr.match_id === match.id && pr.user_id === p.id);
+            const pred = predsFromDB.find(
+              pr => pr.match_id === match.id && pr.user_id === p.id
+            );
             if (pred) {
-              const predSign = resultSign(pred.home_score, pred.away_score);
-              const realSign = resultSign(match.home_score, match.away_score);
-              let pts = 0;
-              if (pred.home_score === match.home_score && pred.away_score === match.away_score) pts = 3;
-              else if (predSign === realSign) pts = 1;
-              row += `<td>${pred.home_score}-${pred.away_score} (${pts})</td>`;
+              if (
+                match.home_score !== null &&
+                match.away_score !== null
+              ) {
+                // Partida finalizada: calcula pontos
+                const predSign = resultSign(
+                  pred.home_score,
+                  pred.away_score
+                );
+                const realSign = resultSign(
+                  match.home_score,
+                  match.away_score
+                );
+                let pts = 0;
+                if (
+                  pred.home_score === match.home_score &&
+                  pred.away_score === match.away_score
+                )
+                  pts = 3;
+                else if (predSign === realSign) pts = 1;
+                row += `<td>${pred.home_score}-${pred.away_score} (${pts})</td>`;
+              } else {
+                // Partida ainda sem placar: mostra apenas o palpite
+                row += `<td>${pred.home_score}-${pred.away_score}</td>`;
+              }
             } else {
               row += `<td>-</td>`;
             }
@@ -827,34 +858,68 @@ function handleResultados(req, res, user) {
       res.end(html);
     })
     .catch(err => {
-      console.error('Erro ao obter palpites do banco para resultados:', err.message);
+      console.error(
+        'Erro ao obter palpites do banco para resultados:',
+        err.message
+      );
       // Fallback para implementação antiga usando JSON
       let sectionsHtml = '';
       sortedRounds.forEach(r => {
         const matchesInRound = rounds[r];
         const presenters = data.users.filter(u => !u.isAdmin);
-        let tableHead = '<tr><th>Confronto</th><th>Placar</th>';
+        let tableHead =
+          '<tr><th>Confronto</th><th>Placar</th>';
         presenters.forEach(p => {
           tableHead += `<th>${p.name}</th>`;
         });
         tableHead += '</tr>';
         let tableRows = '';
         matchesInRound.forEach(match => {
-          const homeTeam = data.teams.find(t => t.id === match.home_team_id);
-          const awayTeam = data.teams.find(t => t.id === match.away_team_id);
+          const homeTeam = data.teams.find(
+            t => t.id === match.home_team_id
+          );
+          const awayTeam = data.teams.find(
+            t => t.id === match.away_team_id
+          );
           // Representa as equipes com pontos coloridos nas linhas de resultados (fallback)
           const homeDot = getTeamDot(homeTeam, true);
           const awayDot = getTeamDot(awayTeam, true);
-          let row = `<tr><td>${homeDot} ${homeTeam.name} x ${awayDot} ${awayTeam.name}</td><td>${match.home_score}-${match.away_score}</td>`;
+          // Exibe placar ou hífen
+          const scoreDisplay =
+            match.home_score !== null && match.away_score !== null
+              ? `${match.home_score}-${match.away_score}`
+              : '-';
+          let row = `<tr><td>${homeDot} ${homeTeam.name} x ${awayDot} ${awayTeam.name}</td><td>${scoreDisplay}</td>`;
           presenters.forEach(p => {
-            const pred = data.predictions.find(pr => pr.match_id === match.id && pr.user_id === p.id);
+            const pred = data.predictions.find(
+              pr => pr.match_id === match.id && pr.user_id === p.id
+            );
             if (pred) {
-              const predSign = resultSign(pred.home_score, pred.away_score);
-              const realSign = resultSign(match.home_score, match.away_score);
-              let pts = 0;
-              if (pred.home_score === match.home_score && pred.away_score === match.away_score) pts = 3;
-              else if (predSign === realSign) pts = 1;
-              row += `<td>${pred.home_score}-${pred.away_score} (${pts})</td>`;
+              if (
+                match.home_score !== null &&
+                match.away_score !== null
+              ) {
+                // Calcula pontos quando há placar
+                const predSign = resultSign(
+                  pred.home_score,
+                  pred.away_score
+                );
+                const realSign = resultSign(
+                  match.home_score,
+                  match.away_score
+                );
+                let pts = 0;
+                if (
+                  pred.home_score === match.home_score &&
+                  pred.away_score === match.away_score
+                )
+                  pts = 3;
+                else if (predSign === realSign) pts = 1;
+                row += `<td>${pred.home_score}-${pred.away_score} (${pts})</td>`;
+              } else {
+                // Mostra palpite sem pontuação quando não há placar
+                row += `<td>${pred.home_score}-${pred.away_score}</td>`;
+              }
             } else {
               row += `<td>-</td>`;
             }
