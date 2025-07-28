@@ -1116,10 +1116,13 @@ const server = http.createServer((req, res) => {
   res.end('Página não encontrada');
 });
 
-// Start server if run directly
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor iniciado em http://0.0.0.0:${PORT}`);
-});
+// Start server if run directly teste
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor iniciado em http://localhost:${PORT}`);
+  });
+}
+
 
 module.exports = server;
