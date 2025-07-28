@@ -16,6 +16,7 @@ const dbAccess = require('./database');
 // conforme decisão do administrador (por exemplo, jogos anulados na rodada 18).
 const excludedMatchIds = new Set([5, 6, 7, 8]);
 
+// Commit atualizado 28/07/2025
 // Mapeamento de cores para cada equipe. Cada sigla recebe uma cor distinta
 // para representar visualmente o time por meio de um círculo colorido. As
 // cores foram escolhidas manualmente e podem ser ajustadas conforme

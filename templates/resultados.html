@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/static/style.css">
   <script>
   function toggleRound(id) {
+    console.log('toggleRound', id);
     const elem = document.getElementById('round-body-'+id);
     if (elem.style.display === 'block') {
       elem.style.display = 'none';
