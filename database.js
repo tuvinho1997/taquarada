@@ -9,6 +9,7 @@ const crypto = require('crypto');
 // apenas algumas rotas utilizam essas funções diretamente; a refatoração
 // completa para o banco pode ser feita posteriormente.
 
+// Commit atualizado 28/07/2025
 // IDs de partidas que não devem ser considerados em palpites e ranking. Estes
 // jogos permanecem no histórico de resultados, mas não devem aparecer na
 // página de palpites nem contar pontos no ranking. A lista é definida
@@ -1199,10 +1200,7 @@ const server = http.createServer((req, res) => {
     handleRanking(req, res, user);
     return;
   }
-  if (pathname === '/resultados' && method === 'GET') {
-    handleResultados(req, res, user);
-    return;
-  }
+  // Removida a duplicação da rota /resultados - agora apenas no server.js
   if (pathname === '/artilharia' && method === 'GET') {
     handleArtilharia(req, res, user);
     return;
