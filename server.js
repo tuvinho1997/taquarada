@@ -13,7 +13,7 @@ const dbAccess = require('./database');
 // IDs de partidas que não devem ser considerados em palpites e ranking. Estes
 // jogos permanecem no histórico de resultados, mas não devem aparecer na
 // página de palpites nem contar pontos no ranking. A lista é definida
-// conforme decisão do administrador (por exemplo, jogos anulados na rodada 18).s
+// conforme decisão do administrador (por exemplo, jogos anulados na rodada 18).
 const excludedMatchIds = new Set([5, 6, 7, 8]);
 
 // Commit atualizado 28/07/2025
@@ -304,10 +304,12 @@ function buildNavLinks(user) {
 
 function handleHome(req, res, user) {
   const data = loadData();
-  // Não reordena a classificação: usa a ordem fornecida pelo arquivo de dados (scrap).
-  // Isso preserva exatamente a colocação dos times conforme definido externamente,
-  // em vez de aplicar critérios de desempate aqui.
-  const sorted = data.classification;
+  // Para refletir a realidade do campeonato, a tabela de classificação deve ser
+  // ordenada de acordo com os critérios usuais (pontos, vitórias, saldo de gols etc.).
+  // Em vez de utilizar a ordem fornecida no arquivo JSON, recalculamos a
+  // classificação com base nas partidas finalizadas. A função
+  // computeClassification retorna os dados já ordenados.
+  const sorted = computeClassification(data.teams, data.matches);
   // Build table rows
   let rows = '';
   sorted.forEach((entry, index) => {
