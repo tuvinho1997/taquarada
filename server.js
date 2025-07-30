@@ -304,12 +304,20 @@ function buildNavLinks(user) {
 
 function handleHome(req, res, user) {
   const data = loadData();
-  // Para refletir a realidade do campeonato, a tabela de classificação deve ser
-  // ordenada de acordo com os critérios usuais (pontos, vitórias, saldo de gols etc.).
-  // Em vez de utilizar a ordem fornecida no arquivo JSON, recalculamos a
-  // classificação com base nas partidas finalizadas. A função
-  // computeClassification retorna os dados já ordenados.
-  const sorted = computeClassification(data.teams, data.matches);
+  // Ordena a classificação utilizando as estatísticas já armazenadas no arquivo
+  // `classification.json`. Isso preserva as quantidades de jogos, vitórias,
+  // empates e derrotas informadas externamente, mas exibe os clubes
+  // na ordem correta (pontos, vitórias, saldo de gols, gols pró e nome).
+  const sorted = data.classification.slice();
+  sorted.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.goal_diff !== a.goal_diff) return b.goal_diff - a.goal_diff;
+    if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+    const teamA = data.teams.find(t => t.id === a.team_id);
+    const teamB = data.teams.find(t => t.id === b.team_id);
+    return teamA.name.localeCompare(teamB.name);
+  });
   // Build table rows
   let rows = '';
   sorted.forEach((entry, index) => {
