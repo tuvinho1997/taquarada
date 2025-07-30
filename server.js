@@ -13,7 +13,7 @@ const dbAccess = require('./database');
 // IDs de partidas que não devem ser considerados em palpites e ranking. Estes
 // jogos permanecem no histórico de resultados, mas não devem aparecer na
 // página de palpites nem contar pontos no ranking. A lista é definida
-// conforme decisão do administrador (por exemplo, jogos anulados na rodada 18).
+// conforme decisão do administrador (por exemplo, jogos anulados na rodada 18).s
 const excludedMatchIds = new Set([5, 6, 7, 8]);
 
 // Commit atualizado 28/07/2025
