@@ -195,6 +195,92 @@ function computeTeamForm(teamId, matches) {
   return form;
 }
 
+/**
+ * Gera automaticamente a classificação da Série B com base nos
+ * resultados das partidas finalizadas. A função considera todas
+ * as equipes cadastradas e percorre a lista de confrontos para
+ * acumular partidas, vitórias, empates, derrotas, gols pró e
+ * contra. Empates valem 1 ponto e vitórias 3 pontos. Partidas
+ * sem placares (home_score ou away_score nulos) são ignoradas.
+ *
+ * O array resultante é ordenado de forma decrescente pelos
+ * critérios usuais: pontos, vitórias, saldo de gols, gols pró e
+ * ordem alfabética do nome do time para desempate final. Esta
+ * ordenação garante que a tabela exibida na página inicial
+ * reflita a situação real do campeonato sem depender de edição
+ * manual.
+ *
+ * @param {Array} teams Lista de equipes cadastradas
+ * @param {Array} matches Lista de partidas, contendo placares
+ * @returns {Array} Nova lista de objetos de classificação
+ */
+function computeClassification(teams, matches) {
+  // Inicializa um mapa para acumular estatísticas de cada time
+  const map = {};
+  teams.forEach(team => {
+    map[team.id] = {
+      team_id: team.id,
+      points: 0,
+      games: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      goals_for: 0,
+      goals_against: 0,
+      goal_diff: 0
+    };
+  });
+  // Processa cada partida finalizada
+  matches.forEach(match => {
+    const hs = match.home_score;
+    const as = match.away_score;
+    // Ignora partidas que ainda não têm ambos os placares definidos
+    if (hs === null || as === null) return;
+    const homeStats = map[match.home_team_id];
+    const awayStats = map[match.away_team_id];
+    // Atualiza jogos e gols
+    homeStats.games++;
+    awayStats.games++;
+    homeStats.goals_for += hs;
+    homeStats.goals_against += as;
+    awayStats.goals_for += as;
+    awayStats.goals_against += hs;
+    // Determina resultado e distribui pontos
+    if (hs > as) {
+      homeStats.wins++;
+      homeStats.points += 3;
+      awayStats.losses++;
+    } else if (hs < as) {
+      awayStats.wins++;
+      awayStats.points += 3;
+      homeStats.losses++;
+    } else {
+      homeStats.draws++;
+      awayStats.draws++;
+      homeStats.points += 1;
+      awayStats.points += 1;
+    }
+  });
+  // Calcula saldo de gols
+  teams.forEach(team => {
+    const stats = map[team.id];
+    stats.goal_diff = stats.goals_for - stats.goals_against;
+  });
+  // Converte o mapa em lista e ordena pelos critérios de desempate
+  const classification = Object.values(map);
+  classification.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.goal_diff !== a.goal_diff) return b.goal_diff - a.goal_diff;
+    if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+    // desempate por ordem alfabética do nome do time
+    const teamA = teams.find(t => t.id === a.team_id);
+    const teamB = teams.find(t => t.id === b.team_id);
+    return teamA.name.localeCompare(teamB.name);
+  });
+  return classification;
+}
+
 // Determine result sign: returns 'home', 'draw', 'away'
 function resultSign(home, away) {
   if (home > away) return 'home';
@@ -1035,37 +1121,32 @@ function handleAdminUpdateMatches(req, res, user) {
         match.away_score = aVal !== '' ? parseInt(aVal) : null;
       }
     });
+    // Persiste os placares atualizados
     writeJSON('matches.json', dataStore.matches);
+    // Após atualizar os resultados, recalcule a classificação de forma automática.
+    // Isso elimina a necessidade de editar manualmente a tabela de classificação.
+    const updatedClassification = computeClassification(dataStore.teams, dataStore.matches);
+    writeJSON('classification.json', updatedClassification);
     sendRedirect(res, '/admin');
   });
 }
 
 function handleAdminUpdateClassification(req, res, user) {
+  // Neste projeto a classificação é recalculada automaticamente a partir
+  // dos resultados das partidas. Portanto, quaisquer valores enviados
+  // pelo formulário de edição são ignorados. Ao receber esta requisição
+  // (que ocorre quando o administrador clica em "Salvar Classificação"),
+  // simplesmente recalcule a classificação com base nos placares atuais
+  // e persista o arquivo correspondente. Isso garante que a tabela
+  // apresentada no portal esteja sempre alinhada com os resultados.
+  // Se no futuro for necessário ajustar critérios de desempate, basta
+  // alterar a função computeClassification.
   let body = '';
   req.on('data', chunk => { body += chunk.toString(); });
   req.on('end', () => {
     const dataStore = loadData();
-    const form = querystring.parse(body);
-    dataStore.classification.forEach(entry => {
-      const id = entry.team_id;
-      const ptsKey = `pts_${id}`;
-      const jKey = `j_${id}`;
-      const vKey = `v_${id}`;
-      const eKey = `e_${id}`;
-      const dKey = `d_${id}`;
-      const gpKey = `gp_${id}`;
-      const gcKey = `gc_${id}`;
-      const sgKey = `sg_${id}`;
-      entry.points = parseInt(form[ptsKey]);
-      entry.games = parseInt(form[jKey]);
-      entry.wins = parseInt(form[vKey]);
-      entry.draws = parseInt(form[eKey]);
-      entry.losses = parseInt(form[dKey]);
-      entry.goals_for = parseInt(form[gpKey]);
-      entry.goals_against = parseInt(form[gcKey]);
-      entry.goal_diff = parseInt(form[sgKey]);
-    });
-    writeJSON('classification.json', dataStore.classification);
+    const updatedClassification = computeClassification(dataStore.teams, dataStore.matches);
+    writeJSON('classification.json', updatedClassification);
     sendRedirect(res, '/admin');
   });
 }
