@@ -1,13 +1,13 @@
 [
   {
     "team_id": 1,
-    "points": 36,
-    "games": 18,
+    "points": 37,
+    "games": 19,
     "wins": 11,
-    "draws": 3,
+    "draws": 4,
     "losses": 4,
-    "goals_for": 23,
-    "goals_against": 14,
+    "goals_for": 24,
+    "goals_against": 15,
     "goal_diff": 9
   },
   {
@@ -45,25 +45,25 @@
   },
   {
     "team_id": 7,
-    "points": 29,
-    "games": 18,
+    "points": 30,
+    "games": 19,
     "wins": 7,
-    "draws": 8,
+    "draws": 9,
     "losses": 3,
-    "goals_for": 21,
-    "goals_against": 16,
+    "goals_for": 22,
+    "goals_against": 17,
     "goal_diff": 5
   },
   {
     "team_id": 5,
     "points": 28,
-    "games": 18,
+    "games": 19,
     "wins": 8,
     "draws": 4,
-    "losses": 6,
+    "losses": 7,
     "goals_for": 22,
-    "goals_against": 21,
-    "goal_diff": 1
+    "goals_against": 22,
+    "goal_diff": 0
   },
   {
     "team_id": 6,
@@ -78,14 +78,14 @@
   },
   {
     "team_id": 10,
-    "points": 26,
-    "games": 18,
-    "wins": 7,
+    "points": 29,
+    "games": 19,
+    "wins": 8,
     "draws": 5,
     "losses": 6,
-    "goals_for": 22,
+    "goals_for": 23,
     "goals_against": 17,
-    "goal_diff": 5
+    "goal_diff": 6
   },
   {
     "team_id": 13,
@@ -111,14 +111,14 @@
   },
   {
     "team_id": 8,
-    "points": 25,
-    "games": 18,
-    "wins": 6,
+    "points": 28,
+    "games": 19,
+    "wins": 7,
     "draws": 7,
     "losses": 5,
-    "goals_for": 21,
+    "goals_for": 26,
     "goals_against": 20,
-    "goal_diff": 1
+    "goal_diff": 6
   },
   {
     "team_id": 12,
@@ -144,14 +144,14 @@
   },
   {
     "team_id": 11,
-    "points": 22,
-    "games": 18,
+    "points": 23,
+    "games": 19,
     "wins": 7,
-    "draws": 1,
+    "draws": 2,
     "losses": 10,
-    "goals_for": 21,
-    "goals_against": 25,
-    "goal_diff": -4
+    "goals_for": 22,
+    "goals_against": 20,
+    "goal_diff": 2
   },
   {
     "team_id": 15,
@@ -188,13 +188,13 @@
   },
   {
     "team_id": 16,
-    "points": 19,
-    "games": 18,
+    "points": 20,
+    "games": 19,
     "wins": 4,
-    "draws": 7,
+    "draws": 8,
     "losses": 7,
-    "goals_for": 17,
-    "goals_against": 20,
+    "goals_for": 18,
+    "goals_against": 21,
     "goal_diff": -3
   },
   {
@@ -211,12 +211,12 @@
   {
     "team_id": 19,
     "points": 18,
-    "games": 18,
+    "games": 19,
     "wins": 4,
     "draws": 6,
-    "losses": 8,
+    "losses": 9,
     "goals_for": 12,
-    "goals_against": 22,
-    "goal_diff": -10
+    "goals_against": 27,
+    "goal_diff": -15
   }
 ]
