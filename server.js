@@ -1082,26 +1082,28 @@ function handleAdminGet(req, res, user) {
                  `<td><input type="number" name="home_${match.id}" value="${hVal}" min="0"></td>`+
                  `<td><input type="number" name="away_${match.id}" value="${aVal}" min="0"></td></tr>`;
   });
-  // Build classification rows for editing
-  let classRows = '';
-  data.classification.forEach(entry => {
-    const team = data.teams.find(t => t.id === entry.team_id);
-    classRows += `<tr><td>${team.name}</td>`+
-                 `<td><input type="number" name="pts_${entry.team_id}" value="${entry.points}" min="0"></td>`+
-                 `<td><input type="number" name="j_${entry.team_id}" value="${entry.games}" min="0"></td>`+
-                 `<td><input type="number" name="v_${entry.team_id}" value="${entry.wins}" min="0"></td>`+
-                 `<td><input type="number" name="e_${entry.team_id}" value="${entry.draws}" min="0"></td>`+
-                 `<td><input type="number" name="d_${entry.team_id}" value="${entry.losses}" min="0"></td>`+
-                 `<td><input type="number" name="gp_${entry.team_id}" value="${entry.goals_for}" min="0"></td>`+
-                 `<td><input type="number" name="gc_${entry.team_id}" value="${entry.goals_against}" min="0"></td>`+
-                 `<td><input type="number" name="sg_${entry.team_id}" value="${entry.goal_diff}" min="-100"></td></tr>`;
-  });
-  // Build scorer rows for editing
+  // A tabela de classificação deixou de ser editável via Admin. Por isso não
+  // construímos linhas de edição para ela. A classificação é calculada
+  // automaticamente a partir dos resultados das partidas.
+  const classRows = '';
+  // Build scorer rows for editing. Each row allows editing the player's name,
+  // selecting a team from a dropdown and changing the number of goals. The
+  // index `idx` is preserved so the server can correlate form fields back
+  // to the correct entry in the scorers array.
   let scorerRows = '';
   data.scorers.forEach((s, idx) => {
-    const team = data.teams.find(t => t.id === s.team_id);
-    scorerRows += `<tr><td>${s.player}</td><td>${team.name}</td>`+
-                 `<td><input type="number" name="goals_${idx}" value="${s.goals}" min="0"></td>`+
+    const currentTeam = data.teams.find(t => t.id === s.team_id);
+    // Build select options for each team
+    let options = '';
+    data.teams.forEach(team => {
+      const selected = team.id === s.team_id ? ' selected' : '';
+      options += `<option value="${team.id}"${selected}>${team.name}</option>`;
+    });
+    const select = `<select name="team_${idx}">${options}</select>`;
+    scorerRows += `<tr>`+
+                 `<td><input type="text" name="player_${idx}" value="${s.player}" required></td>`+
+                 `<td>${select}</td>`+
+                 `<td><input type="number" name="goals_${idx}" value="${s.goals}" min="0" required></td>`+
                  `</tr>`;
   });
   const html = renderTemplate('admin.html', {
@@ -1168,13 +1170,34 @@ function handleAdminUpdateScorers(req, res, user) {
     const dataStore = loadData();
     const form = querystring.parse(body);
     dataStore.scorers.forEach((s, idx) => {
-      const key = `goals_${idx}`;
-      if (form[key] !== undefined) {
-        s.goals = parseInt(form[key]);
+      // Update player name if provided
+      const playerKey = `player_${idx}`;
+      if (form[playerKey] !== undefined && form[playerKey].trim() !== '') {
+        s.player = form[playerKey].trim();
+      }
+      // Update team ID if provided
+      const teamKey = `team_${idx}`;
+      if (form[teamKey] !== undefined) {
+        const newTeamId = parseInt(form[teamKey]);
+        // Only assign if it corresponds to an existing team
+        const exists = dataStore.teams.find(t => t.id === newTeamId);
+        if (exists) {
+          s.team_id = newTeamId;
+        }
+      }
+      // Update goals if provided
+      const goalsKey = `goals_${idx}`;
+      if (form[goalsKey] !== undefined) {
+        const parsedGoals = parseInt(form[goalsKey]);
+        s.goals = isNaN(parsedGoals) ? 0 : parsedGoals;
       }
     });
-    // After updating goals, reassign ranks based on descending goals
-    dataStore.scorers.sort((a, b) => b.goals - a.goals);
+    // After updating, sort by descending goals and reassign ranks
+    dataStore.scorers.sort((a, b) => {
+      if (b.goals !== a.goals) return b.goals - a.goals;
+      // Tiebreaker: alphabetical by player name
+      return a.player.localeCompare(b.player);
+    });
     dataStore.scorers.forEach((s, i) => {
       s.rank = i + 1;
     });
