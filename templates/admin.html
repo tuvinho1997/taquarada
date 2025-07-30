@@ -44,32 +44,14 @@
         <button type="submit">Salvar Resultados</button>
       </form>
     </section>
-    <section class="admin-form">
-      <h3>Atualizar Classificação</h3>
-      <form method="POST" action="/admin/update_classification">
-        <table>
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Pts</th>
-              <th>J</th>
-              <th>V</th>
-              <th>E</th>
-              <th>D</th>
-              <th>GP</th>
-              <th>GC</th>
-              <th>SG</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{class_rows}}
-          </tbody>
-        </table>
-        <button type="submit">Salvar Classificação</button>
-      </form>
-    </section>
+    <!-- A edição manual da classificação foi removida. A tabela de classificação agora é calculada
+         automaticamente com base nos resultados e apresentada somente na página principal. -->
     <section class="admin-form">
       <h3>Atualizar Artilharia</h3>
+      <p>Edite os dados de cada artilheiro. É possível alterar o nome do jogador,
+        selecionar seu time e atualizar o número de gols. A ordem final será
+        calculada automaticamente pelo servidor com base na quantidade de
+        gols informada.</p>
       <form method="POST" action="/admin/update_scorers">
         <table>
           <thead>
