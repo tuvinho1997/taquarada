@@ -196,6 +196,83 @@ function computeTeamForm(teamId, matches) {
 }
 
 /**
+ * Aplica as estatísticas de um confronto à classificação de um time.
+ * Quando `add` é verdadeiro, soma os valores; quando falso, subtrai.
+ *
+ * @param {Object} entry Objeto de classificação do time (será modificado).
+ * @param {number} goalsFor Gols marcados pelo time nesse confronto.
+ * @param {number} goalsAgainst Gols sofridos pelo time nesse confronto.
+ * @param {boolean} add Se verdadeiro, adiciona; se falso, remove.
+ */
+function applyMatchStats(entry, goalsFor, goalsAgainst, add = true) {
+  const sign = add ? 1 : -1;
+  entry.games += 1 * sign;
+  entry.goals_for += goalsFor * sign;
+  entry.goals_against += goalsAgainst * sign;
+  if (goalsFor > goalsAgainst) {
+    entry.wins += 1 * sign;
+    entry.points += 3 * sign;
+  } else if (goalsFor < goalsAgainst) {
+    entry.losses += 1 * sign;
+    // derrota não adiciona pontos
+  } else {
+    entry.draws += 1 * sign;
+    entry.points += 1 * sign;
+  }
+}
+
+/**
+ * Atualiza a classificação existente a partir das diferenças entre duas
+ * listas de partidas (antes e depois). Para cada partida cujo placar
+ * tenha sido alterado (de null para um número, de um valor para outro
+ * ou vice-versa), remove os efeitos do placar antigo e adiciona os
+ * efeitos do placar novo. As partidas sem alteração de placar são
+ * ignoradas.
+ *
+ * @param {Array} classification Lista de classificações atuais
+ * @param {Array} oldMatches Lista de partidas antes da atualização
+ * @param {Array} newMatches Lista de partidas após a atualização
+ * @returns {Array} Nova lista de classificações atualizada
+ */
+function updateClassificationFromMatchChanges(classification, oldMatches, newMatches) {
+  // Converte classificação em mapa para alteração rápida
+  const map = {};
+  classification.forEach(entry => {
+    // Faz uma cópia para não modificar o original diretamente
+    map[entry.team_id] = { ...entry };
+  });
+  // Itera sobre as partidas antigas e novas simultaneamente
+  oldMatches.forEach((oldMatch) => {
+    // Encontra a partida correspondente na nova lista
+    const newMatch = newMatches.find(m => m.id === oldMatch.id);
+    if (!newMatch) return;
+    const oldHS = oldMatch.home_score;
+    const oldAS = oldMatch.away_score;
+    const newHS = newMatch.home_score;
+    const newAS = newMatch.away_score;
+    // Se o placar não mudou, nada a fazer
+    if (oldHS === newHS && oldAS === newAS) {
+      return;
+    }
+    // Remove estatísticas do placar antigo (se existia)
+    if (oldHS !== null && oldAS !== null) {
+      applyMatchStats(map[oldMatch.home_team_id], oldHS, oldAS, false);
+      applyMatchStats(map[oldMatch.away_team_id], oldAS, oldHS, false);
+    }
+    // Adiciona estatísticas do novo placar (se existe)
+    if (newHS !== null && newAS !== null) {
+      applyMatchStats(map[newMatch.home_team_id], newHS, newAS, true);
+      applyMatchStats(map[newMatch.away_team_id], newAS, newHS, true);
+    }
+  });
+  // Recalcula saldo de gols
+  Object.values(map).forEach(entry => {
+    entry.goal_diff = entry.goals_for - entry.goals_against;
+  });
+  return Object.values(map);
+}
+
+/**
  * Gera automaticamente a classificação da Série B com base nos
  * resultados das partidas finalizadas. A função considera todas
  * as equipes cadastradas e percorre a lista de confrontos para
@@ -1123,6 +1200,9 @@ function handleAdminUpdateMatches(req, res, user) {
   req.on('end', () => {
     const dataStore = loadData();
     const form = querystring.parse(body);
+    // Faz uma cópia profunda das partidas antes de aplicar as alterações para
+    // determinar as diferenças de placar posteriormente
+    const oldMatches = JSON.parse(JSON.stringify(dataStore.matches));
     dataStore.matches.forEach(match => {
       const homeKey = `home_${match.id}`;
       const awayKey = `away_${match.id}`;
@@ -1135,9 +1215,21 @@ function handleAdminUpdateMatches(req, res, user) {
     });
     // Persiste os placares atualizados
     writeJSON('matches.json', dataStore.matches);
-    // Após atualizar os resultados, recalcule a classificação de forma automática.
-    // Isso elimina a necessidade de editar manualmente a tabela de classificação.
-    const updatedClassification = computeClassification(dataStore.teams, dataStore.matches);
+    // Atualiza a classificação incrementalmente apenas para os jogos cujo placar mudou.
+    const updatedClassification = updateClassificationFromMatchChanges(
+      dataStore.classification,
+      oldMatches,
+      dataStore.matches
+    );
+    // Opcional: ordenar a classificação atualizada pelos critérios usuais
+    updatedClassification.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.goal_diff !== a.goal_diff) return b.goal_diff - a.goal_diff;
+      if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+      // Sem acesso ao array de equipes aqui, pode-se manter a ordem atual como último critério
+      return 0;
+    });
     writeJSON('classification.json', updatedClassification);
     sendRedirect(res, '/admin');
   });
