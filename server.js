@@ -4,7 +4,7 @@ const path = require('path');
 const url = require('url');
 const querystring = require('querystring');
 const crypto = require('crypto');
-// Importa camada de acesso ao banco de dados. Esta camada fornece funções
+// Importa camada de acesso ao banco de dados. Esta camada fornece funçõess
 // assíncronas para consultar e manipular registros no SQLite. Atualmente
 // apenas algumas rotas utilizam essas funções diretamente; a refatoração
 // completa para o banco pode ser feita posteriormente.
