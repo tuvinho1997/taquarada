@@ -1117,27 +1117,45 @@ function handleResultados(req, res, user) {
 
 function handleArtilharia(req, res, user) {
   const data = loadData();
-  // Sort scorers by goals desc
-  const sorted = [...data.scorers].sort((a, b) => {
-    if (b.goals !== a.goals) return b.goals - a.goals;
-    return a.player.localeCompare(b.player);
-  });
+  /*
+    A página de artilharia foi transformada para exibir a próxima rodada de
+    jogos para palpitar. Em vez de listar os goleadores, definimos
+    manualmente a agenda da rodada 21 com base nas datas oficiais da Série B
+    2025. Essa lista não é derivada do banco de dados, pois a rodada 21
+    ainda não consta em matches.json. Caso seja necessário automatizar essa
+    lógica no futuro, basta carregar os confrontos do banco.
+  */
+  const nextRoundNumber = 21;
+  const nextRoundTitle = `Rodada ${nextRoundNumber} - Próxima Rodada`;
+  // Lista estática da rodada 21: data/hora (dd/mm HH:MM), siglas dos times
+  const nextRoundMatches = [
+    { date: '08/08 19:00', home: 'FER', away: 'AMA' }, // Ferroviária x Amazonas
+    { date: '08/08 21:35', home: 'CFC', away: 'CHA' }, // Coritiba x Chapecoense
+    { date: '09/08 16:00', home: 'AME', away: 'REM' }, // América-MG x Remo
+    { date: '09/08 18:30', home: 'GOI', away: 'OPE' }, // Goiás x Operário
+    { date: '09/08 20:30', home: 'VOL', away: 'NOV' }, // Volta Redonda x Novorizontino
+    { date: '10/08 16:00', home: 'AVA', away: 'CUI' }, // Avaí x Cuiabá
+    { date: '10/08 18:30', home: 'ACG', away: 'BFC' }, // Atlético-GO x Botafogo-SP
+    { date: '11/08 19:00', home: 'CRI', away: 'CAP' }, // Criciúma x Athletico-PR
+    { date: '11/08 21:30', home: 'PAY', away: 'VNO' }, // Paysandu x Vila Nova
+    { date: '12/08 19:30', home: 'CRB', away: 'ATH' }  // CRB x Athletic Club
+  ];
+  // Monta as linhas da tabela com data/hora e confronto. Cada time é
+  // representado pelo seu escudo (ou ponto colorido) seguido do nome.
   let rows = '';
-  sorted.forEach((s, idx) => {
-    const team = data.teams.find(t => t.id === s.team_id);
-    // Determine icon
-    let icon = '';
-    const rank = idx + 1;
-    if (rank === 1) icon = '<i class="fa-solid fa-trophy" style="color:#fbc02d;"></i>';
-    else if (rank <= 3) icon = '<i class="fa-solid fa-medal" style="color:#b0bec5;"></i>';
-    else if (rank <= 10) icon = '<i class="fa-solid fa-star" style="color:#ffa000;"></i>';
-    // Representa o time com um ponto colorido seguido do nome
-    const teamDot = getTeamDot(team, true);
-    rows += `<tr><td>${rank}</td><td>${s.player}</td><td>${teamDot} ${team.name}</td><td>${s.goals}</td><td>${icon}</td></tr>`;
+  nextRoundMatches.forEach(match => {
+    const home = data.teams.find(t => t.abbr.toUpperCase() === match.home);
+    const away = data.teams.find(t => t.abbr.toUpperCase() === match.away);
+    // Se algum time não for encontrado, ignora a linha para evitar erros
+    if (!home || !away) return;
+    const homeDot = getTeamDot(home, true);
+    const awayDot = getTeamDot(away, true);
+    rows += `<tr><td>${match.date}</td><td>${homeDot} ${home.name} x ${awayDot} ${away.name}</td></tr>`;
   });
   const nav = buildNavLinks(user);
   const html = renderTemplate('artilharia.html', {
-    scorers_rows: rows,
+    next_round_title: nextRoundTitle,
+    next_round_rows: rows,
     admin_link: nav.adminLink,
     auth_link: nav.authLink
   });
