@@ -2,7 +2,13 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Artilharia - Debate Taquara Raiz</title>
+  <!--
+    Esta página foi repaginada para exibir a próxima rodada de jogos que aguardam
+    palpites. Anteriormente ela mostrava apenas a tabela de artilheiros; agora
+    destacamos a agenda dos próximos confrontos. O título do documento é
+    preenchido dinamicamente pelo servidor conforme a rodada selecionada.
+  -->
+  <title>{{next_round_title}} - Debate Taquara Raiz</title>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -18,29 +24,31 @@
         <li><a href="/palpites">Palpites</a></li>
         <li><a href="/ranking">Ranking</a></li>
         <li><a href="/resultados">Resultados</a></li>
-        <li><a href="/artilharia" class="active">Artilharia</a></li>
+        <!-- A aba Artilharia agora mostra a próxima rodada para palpitar. -->
+        <li><a href="/artilharia" class="active">Próxima Rodada</a></li>
         {{admin_link}}
         {{auth_link}}
       </ul>
     </nav>
   </header>
   <main>
-    <h2>Artilharia Série B 2025</h2>
+    <!-- Título da página definido pelo servidor, ex.: "Rodada 21 - Próxima Rodada" -->
+    <h2>{{next_round_title}}</h2>
+    <!-- Tabela listando data/hora e confrontos da próxima rodada. Os nomes dos
+         times são acompanhados por seus respectivos escudos (imagens) fornecidos
+         pelo servidor. -->
     <table>
       <thead>
         <tr>
-          <th>Pos</th>
-          <th>Jogador</th>
-          <th>Time</th>
-          <th>Gols</th>
-          <th>Destaque</th>
+          <th>Data/Hora</th>
+          <th>Confronto</th>
         </tr>
       </thead>
       <tbody>
-        {{scorers_rows}}
+        {{next_round_rows}}
       </tbody>
     </table>
-    <p>Ícones: <i class="fa-solid fa-trophy" style="color:#fbc02d;"></i> Artilheiro; <i class="fa-solid fa-medal" style="color:#b0bec5;"></i> Top 3; <i class="fa-solid fa-star" style="color:#ffa000;"></i> Top 10.</p>
+    <p style="margin-top:1rem;">Faça seus palpites acessando a aba <a href="/palpites">Palpites</a>. Os palpites registrados nessa rodada serão contabilizados no ranking.</p>
   </main>
   <footer>
     <p>&copy; 2025 Debate Taquara Raiz</p>
