@@ -448,7 +448,8 @@
     "away_team_id": 18,
     "home_score": null,
     "away_score": null
-  },
+  }
+  ,
   {
     "id": 51,
     "round": 21,
@@ -536,96 +537,6 @@
     "date": "2025-08-12",
     "home_team_id": 13,
     "away_team_id": 11,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 61,
-    "round": 22,
-    "date": "2025-08-14 21:35",
-    "home_team_id": 3,
-    "away_team_id": 2,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 62,
-    "round": 22,
-    "date": "2025-08-15 20:00",
-    "home_team_id": 20,
-    "away_team_id": 15,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 63,
-    "round": 22,
-    "date": "2025-08-16 16:00",
-    "home_team_id": 7,
-    "away_team_id": 19,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 64,
-    "round": 22,
-    "date": "2025-08-16 18:30",
-    "home_team_id": 6,
-    "away_team_id": 1,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 65,
-    "round": 22,
-    "date": "2025-08-16 20:30",
-    "home_team_id": 9,
-    "away_team_id": 5,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 66,
-    "round": 22,
-    "date": "2025-08-17 16:00",
-    "home_team_id": 4,
-    "away_team_id": 16,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 67,
-    "round": 22,
-    "date": "2025-08-17 18:30",
-    "home_team_id": 14,
-    "away_team_id": 17,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 68,
-    "round": 22,
-    "date": "2025-08-18 19:00",
-    "home_team_id": 18,
-    "away_team_id": 13,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 69,
-    "round": 22,
-    "date": "2025-08-18 21:00",
-    "home_team_id": 11,
-    "away_team_id": 10,
-    "home_score": null,
-    "away_score": null
-  },
-  {
-    "id": 70,
-    "round": 22,
-    "date": "2025-08-19 19:30",
-    "home_team_id": 12,
-    "away_team_id": 8,
     "home_score": null,
     "away_score": null
   }
