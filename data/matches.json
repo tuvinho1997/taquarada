@@ -448,16 +448,15 @@
     "away_team_id": 18,
     "home_score": null,
     "away_score": null
-  }
-  ,
+  },
   {
     "id": 51,
     "round": 21,
     "date": "2025-08-08",
     "home_team_id": 17,
     "away_team_id": 20,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 52,
@@ -465,8 +464,8 @@
     "date": "2025-08-08",
     "home_team_id": 2,
     "away_team_id": 4,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 53,
@@ -474,8 +473,8 @@
     "date": "2025-08-09",
     "home_team_id": 15,
     "away_team_id": 7,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 54,
@@ -483,8 +482,8 @@
     "date": "2025-08-09",
     "home_team_id": 1,
     "away_team_id": 12,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 55,
@@ -492,8 +491,8 @@
     "date": "2025-08-09",
     "home_team_id": 18,
     "away_team_id": 3,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 56,
@@ -501,8 +500,8 @@
     "date": "2025-08-10",
     "home_team_id": 8,
     "away_team_id": 5,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 57,
@@ -510,8 +509,8 @@
     "date": "2025-08-10",
     "home_team_id": 14,
     "away_team_id": 19,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 58,
@@ -519,8 +518,8 @@
     "date": "2025-08-11",
     "home_team_id": 10,
     "away_team_id": 9,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 59,
@@ -528,8 +527,8 @@
     "date": "2025-08-11",
     "home_team_id": 16,
     "away_team_id": 6,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   },
   {
     "id": 60,
@@ -537,7 +536,7 @@
     "date": "2025-08-12",
     "home_team_id": 13,
     "away_team_id": 11,
-    "home_score": null,
-    "away_score": null
+    "home_score": 0,
+    "away_score": 0
   }
 ]
