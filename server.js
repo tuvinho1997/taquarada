@@ -848,12 +848,57 @@ function handleRanking(req, res, user) {
         const detailsTable = `<table><thead><tr><th>Rodada</th><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
         cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${place}º ${u.name} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
+      // ============================================
+      // Construção dos dados para o gráfico de evolução
+      // ============================================
+      // Lista de todas as rodadas, ordenadas
+      const allRoundsForChart = Array.from(new Set(data.matches.map(m => m.round))).sort((a, b) => a - b);
+      // Estruturas para pontos cumulativos por usuário
+      const cumulativeTotals = {};
+      const series = {};
+      presenters.forEach(p => {
+        cumulativeTotals[p.id] = 0;
+        series[p.name] = [];
+      });
+      // Calcula pontos acumulados por rodada
+      allRoundsForChart.forEach(r => {
+        // Partidas desta rodada (não excluídas)
+        const matchesInRound = data.matches.filter(m => m.round === r && !excludedMatchIds.has(m.id));
+        // Pontos obtidos nesta rodada por usuário
+        const roundPoints = {};
+        presenters.forEach(p => { roundPoints[p.id] = 0; });
+        matchesInRound.forEach(match => {
+          if (match.home_score !== null && match.away_score !== null) {
+            presenters.forEach(p => {
+              const pred = predsFromDB.find(pr => pr.match_id === match.id && pr.user_id === p.id);
+              if (!pred) return;
+              const predSign = resultSign(pred.home_score, pred.away_score);
+              const realSign = resultSign(match.home_score, match.away_score);
+              let points = 0;
+              if (pred.home_score === match.home_score && pred.away_score === match.away_score) {
+                points = 3;
+              } else if (predSign === realSign) {
+                points = 1;
+              }
+              roundPoints[p.id] += points;
+            });
+          }
+        });
+        // Atualiza cumulativos e armazena na série
+        presenters.forEach(p => {
+          cumulativeTotals[p.id] += roundPoints[p.id];
+          series[p.name].push(cumulativeTotals[p.id]);
+        });
+      });
+      const chartDataObj = { rounds: allRoundsForChart, series: series };
+      const chartDataStr = JSON.stringify(chartDataObj);
       const nav = buildNavLinks(user);
       const html = renderTemplate('ranking.html', {
         ranking_cards: cardsHtml,
         round_selector: selectorHtml,
         admin_link: nav.adminLink,
-        auth_link: nav.authLink
+        auth_link: nav.authLink,
+        chart_data: chartDataStr
       });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -926,12 +971,51 @@ function handleRanking(req, res, user) {
         const detailsTable = `<table><thead><tr><th>Rodada</th><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
         cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${idx + 1}º ${u.name} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
+      // ============================================
+      // Construção dos dados para o gráfico na via de fallback
+      // ============================================
+      const allRoundsForChart = Array.from(new Set(data.matches.map(m => m.round))).sort((a, b) => a - b);
+      const cumulativeTotals = {};
+      const series = {};
+      presenters.forEach(p => {
+        cumulativeTotals[p.id] = 0;
+        series[p.name] = [];
+      });
+      allRoundsForChart.forEach(r => {
+        const matchesInRound = data.matches.filter(m => m.round === r && !excludedMatchIds.has(m.id));
+        const roundPoints = {};
+        presenters.forEach(p => { roundPoints[p.id] = 0; });
+        matchesInRound.forEach(match => {
+          if (match.home_score !== null && match.away_score !== null) {
+            presenters.forEach(p => {
+              const pred = data.predictions.find(pr => pr.match_id === match.id && pr.user_id === p.id);
+              if (!pred) return;
+              const predSign = resultSign(pred.home_score, pred.away_score);
+              const realSign = resultSign(match.home_score, match.away_score);
+              let points = 0;
+              if (pred.home_score === match.home_score && pred.away_score === match.away_score) {
+                points = 3;
+              } else if (predSign === realSign) {
+                points = 1;
+              }
+              roundPoints[p.id] += points;
+            });
+          }
+        });
+        presenters.forEach(p => {
+          cumulativeTotals[p.id] += roundPoints[p.id];
+          series[p.name].push(cumulativeTotals[p.id]);
+        });
+      });
+      const chartDataObj = { rounds: allRoundsForChart, series: series };
+      const chartDataStr = JSON.stringify(chartDataObj);
       const nav = buildNavLinks(user);
       const html = renderTemplate('ranking.html', {
         ranking_cards: cardsHtml,
         round_selector: selectorHtml,
         admin_link: nav.adminLink,
-        auth_link: nav.authLink
+        auth_link: nav.authLink,
+        chart_data: chartDataStr
       });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
