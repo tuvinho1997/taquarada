@@ -156,11 +156,29 @@
           ctx.fillText(user, labelPt.x + 5, labelPt.y + 4);
         });
       }
-      // Animation loop
+      // Animation loop with adjustable speed and pause at the end
+      // Speed factor: 0.003 gives roughly 30% of the original 0.01 increment
+      const speed = 0.003;
+      // Pause duration in milliseconds (10 seconds)
+      const pauseDuration = 10000;
       let progress = 0;
+      let paused = false;
       function animate() {
-        progress += 0.01;
-        if (progress > 1) progress = 0;
+        // Only advance progress if not paused
+        if (!paused) {
+          progress += speed;
+          // When the lines are fully drawn, hold for the pause duration
+          if (progress >= 1) {
+            progress = 1;
+            paused = true;
+            // After the pause, reset progress and resume animation
+            setTimeout(() => {
+              progress = 0;
+              paused = false;
+            }, pauseDuration);
+          }
+        }
+        // Always redraw axes and current state of lines
         drawAxes();
         drawLines(progress);
         requestAnimationFrame(animate);
