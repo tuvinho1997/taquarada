@@ -40,6 +40,98 @@
     <!-- Seletor de rodada: permite ver o ranking geral ou por rodada -->
     {{round_selector}}
     {{ranking_cards}}
+
+    <!-- Gráfico de evolução dos apresentadores -->
+    <div class="chart-wrapper" style="margin-top:2rem;">
+      <h3>Evolução dos apresentadores por rodada</h3>
+      <canvas id="ranking-chart" width="900" height="400" style="max-width:100%;"></canvas>
+    </div>
+    <script>
+    // Dados de evolução injetados pelo servidor. Contém o array de rodadas e as séries de cada apresentador.
+    const chartData = {{chart_data}};
+    (function() {
+      if (!chartData || !chartData.rounds || !chartData.series) return;
+      const canvas = document.getElementById('ranking-chart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rounds = chartData.rounds;
+      const series = chartData.series;
+      const users = Object.keys(series);
+      // Define uma paleta de cores para até 6 apresentadores
+      const palette = ['#FF6B6B','#4D96FF','#FFC75F','#845EC2','#00C49A','#8B5CF6'];
+      // Calcular valor máximo para escala Y
+      let maxVal = 0;
+      users.forEach(u => {
+        const arr = series[u];
+        arr.forEach(v => { if (v > maxVal) maxVal = v; });
+      });
+      // Ajusta se todos valores são zero
+      if (maxVal === 0) maxVal = 1;
+      const width = canvas.width;
+      const height = canvas.height;
+      const padding = 40;
+      const plotWidth = width - padding * 2;
+      const plotHeight = height - padding * 2;
+      const xStep = plotWidth / (rounds.length - 1);
+      const yScale = plotHeight / maxVal;
+      // Desenhar eixos
+      ctx.clearRect(0, 0, width, height);
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 1;
+      // Eixo Y
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.stroke();
+      // Eixo X
+      ctx.beginPath();
+      ctx.moveTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.stroke();
+      // Marcas e labels do eixo Y (5 divisões)
+      const divisions = 5;
+      ctx.fillStyle = '#444444';
+      ctx.font = '12px sans-serif';
+      for (let i = 0; i <= divisions; i++) {
+        const yVal = (maxVal / divisions) * i;
+        const y = height - padding - (yVal * yScale);
+        ctx.beginPath();
+        ctx.moveTo(padding - 5, y);
+        ctx.lineTo(padding + 5, y);
+        ctx.stroke();
+        ctx.fillText(Math.round(yVal), padding - 30, y + 4);
+      }
+      // Marcas do eixo X e labels de rodadas
+      rounds.forEach((r, idx) => {
+        const x = padding + xStep * idx;
+        ctx.beginPath();
+        ctx.moveTo(x, height - padding - 5);
+        ctx.lineTo(x, height - padding + 5);
+        ctx.stroke();
+        ctx.fillText(r, x - 5, height - padding + 20);
+      });
+      // Desenhar linhas para cada apresentador
+      users.forEach((user, idx) => {
+        const vals = series[user];
+        const color = palette[idx % palette.length];
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        vals.forEach((val, i) => {
+          const x = padding + xStep * i;
+          const y = height - padding - (val * yScale);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        // Desenha rótulo próximo ao último ponto
+        const lastX = padding + xStep * (vals.length - 1);
+        const lastY = height - padding - (vals[vals.length - 1] * yScale);
+        ctx.fillStyle = color;
+        ctx.fillText(user, lastX + 5, lastY + 4);
+      });
+    })();
+    </script>
   </main>
   <footer>
     <p>&copy; 2025 Debate Taquara Raiz</p>
