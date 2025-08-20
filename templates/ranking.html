@@ -57,15 +57,13 @@
       const rounds = chartData.rounds;
       const series = chartData.series;
       const users = Object.keys(series);
-      // Define uma paleta de cores para até 6 apresentadores
+      // Paleta de cores para até 6 apresentadores
       const palette = ['#FF6B6B','#4D96FF','#FFC75F','#845EC2','#00C49A','#8B5CF6'];
       // Calcular valor máximo para escala Y
       let maxVal = 0;
       users.forEach(u => {
-        const arr = series[u];
-        arr.forEach(v => { if (v > maxVal) maxVal = v; });
+        series[u].forEach(v => { if (v > maxVal) maxVal = v; });
       });
-      // Ajusta se todos valores são zero
       if (maxVal === 0) maxVal = 1;
       const width = canvas.width;
       const height = canvas.height;
@@ -74,62 +72,102 @@
       const plotHeight = height - padding * 2;
       const xStep = plotWidth / (rounds.length - 1);
       const yScale = plotHeight / maxVal;
-      // Desenhar eixos
-      ctx.clearRect(0, 0, width, height);
-      ctx.strokeStyle = '#cccccc';
-      ctx.lineWidth = 1;
-      // Eixo Y
-      ctx.beginPath();
-      ctx.moveTo(padding, padding);
-      ctx.lineTo(padding, height - padding);
-      ctx.stroke();
-      // Eixo X
-      ctx.beginPath();
-      ctx.moveTo(padding, height - padding);
-      ctx.lineTo(width - padding, height - padding);
-      ctx.stroke();
-      // Marcas e labels do eixo Y (5 divisões)
-      const divisions = 5;
-      ctx.fillStyle = '#444444';
-      ctx.font = '12px sans-serif';
-      for (let i = 0; i <= divisions; i++) {
-        const yVal = (maxVal / divisions) * i;
-        const y = height - padding - (yVal * yScale);
-        ctx.beginPath();
-        ctx.moveTo(padding - 5, y);
-        ctx.lineTo(padding + 5, y);
-        ctx.stroke();
-        ctx.fillText(Math.round(yVal), padding - 30, y + 4);
-      }
-      // Marcas do eixo X e labels de rodadas
-      rounds.forEach((r, idx) => {
-        const x = padding + xStep * idx;
-        ctx.beginPath();
-        ctx.moveTo(x, height - padding - 5);
-        ctx.lineTo(x, height - padding + 5);
-        ctx.stroke();
-        ctx.fillText(r, x - 5, height - padding + 20);
-      });
-      // Desenhar linhas para cada apresentador
+
+      // Precompute coordinates for each series to avoid recalculation during animation
+      const seriesCoords = {};
       users.forEach((user, idx) => {
         const vals = series[user];
-        const color = palette[idx % palette.length];
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        vals.forEach((val, i) => {
+        const coords = vals.map((val, i) => {
           const x = padding + xStep * i;
           const y = height - padding - (val * yScale);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          return { x, y };
         });
-        ctx.stroke();
-        // Desenha rótulo próximo ao último ponto
-        const lastX = padding + xStep * (vals.length - 1);
-        const lastY = height - padding - (vals[vals.length - 1] * yScale);
-        ctx.fillStyle = color;
-        ctx.fillText(user, lastX + 5, lastY + 4);
+        seriesCoords[user] = coords;
       });
+
+      // Draw static axes and labels
+      function drawAxes() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.strokeStyle = '#cccccc';
+        ctx.lineWidth = 1;
+        // Y axis
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.stroke();
+        // X axis
+        ctx.beginPath();
+        ctx.moveTo(padding, height - padding);
+        ctx.lineTo(width - padding, height - padding);
+        ctx.stroke();
+        // Y axis ticks and labels (5 divisions)
+        const divisions = 5;
+        ctx.fillStyle = '#444444';
+        ctx.font = '12px sans-serif';
+        for (let i = 0; i <= divisions; i++) {
+          const yVal = (maxVal / divisions) * i;
+          const y = height - padding - (yVal * yScale);
+          ctx.beginPath();
+          ctx.moveTo(padding - 5, y);
+          ctx.lineTo(padding + 5, y);
+          ctx.stroke();
+          ctx.fillText(Math.round(yVal), padding - 30, y + 4);
+        }
+        // X axis ticks and labels
+        rounds.forEach((r, idx) => {
+          const x = padding + xStep * idx;
+          ctx.beginPath();
+          ctx.moveTo(x, height - padding - 5);
+          ctx.lineTo(x, height - padding + 5);
+          ctx.stroke();
+          ctx.fillText(r, x - 5, height - padding + 20);
+        });
+      }
+      // Draw lines up to a fractional progress (0..1)
+      function drawLines(progress) {
+        users.forEach((user, idx) => {
+          const coords = seriesCoords[user];
+          const color = palette[idx % palette.length];
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          const totalSegments = coords.length - 1;
+          const prog = progress * totalSegments;
+          const currentIndex = Math.floor(prog);
+          const frac = prog - currentIndex;
+          coords.forEach((pt, i) => {
+            if (i === 0) {
+              ctx.moveTo(pt.x, pt.y);
+            } else if (i <= currentIndex) {
+              ctx.lineTo(pt.x, pt.y);
+            } else if (i === currentIndex + 1) {
+              // draw partial segment
+              const prev = coords[i - 1];
+              const dx = pt.x - prev.x;
+              const dy = pt.y - prev.y;
+              ctx.lineTo(prev.x + dx * frac, prev.y + dy * frac);
+            }
+          });
+          ctx.stroke();
+          // draw label at end of current visible line
+          const labelPtIndex = Math.min(currentIndex + 1, coords.length - 1);
+          const labelPt = coords[labelPtIndex];
+          ctx.fillStyle = color;
+          ctx.fillText(user, labelPt.x + 5, labelPt.y + 4);
+        });
+      }
+      // Animation loop
+      let progress = 0;
+      function animate() {
+        progress += 0.01;
+        if (progress > 1) progress = 0;
+        drawAxes();
+        drawLines(progress);
+        requestAnimationFrame(animate);
+      }
+      // Initial draw and start animation
+      drawAxes();
+      animate();
     })();
     </script>
   </main>
