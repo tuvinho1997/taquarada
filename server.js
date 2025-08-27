@@ -88,6 +88,42 @@ function writeJSON(filename, data) {
   fs.writeFileSync(p, JSON.stringify(data, null, 2));
 }
 
+// === Dynamic classification computed from matches ===
+function computeClassificationFromMatches(data) {
+  const table = new Map(); // team_id -> stats
+  function ensure(teamId) {
+    if (!table.has(teamId)) {
+      table.set(teamId, { team_id: teamId, points: 0, games: 0, wins: 0, draws: 0, losses: 0, goals_for: 0, goals_against: 0, goal_diff: 0 });
+    }
+    return table.get(teamId);
+  }
+  const played = data.matches.filter(m =>
+    m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id)
+  );
+  for (const m of played) {
+    const home = ensure(m.home_team_id);
+    const away = ensure(m.away_team_id);
+    home.games++; away.games++;
+    home.goals_for += m.home_score; home.goals_against += m.away_score;
+    away.goals_for += m.away_score; away.goals_against += m.home_score;
+    if (m.home_score > m.away_score) { home.wins++; home.points += 3; away.losses++; }
+    else if (m.home_score < m.away_score) { away.wins++; away.points += 3; home.losses++; }
+    else { home.draws++; away.draws++; home.points++; away.points++; }
+  }
+  // compute goal diff
+  for (const st of table.values()) st.goal_diff = st.goals_for - st.goals_against;
+
+  // to array and sort by: points, goal_diff, wins, goals_for
+  const arr = Array.from(table.values()).sort((a,b)=>{
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.goal_diff !== a.goal_diff) return b.goal_diff - a.goal_diff;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    return b.goals_for - a.goals_for;
+  });
+  return arr;
+}
+
+
 // Load all data into memory (will be re-read when needed)
 function loadData() {
   return {
@@ -379,34 +415,37 @@ function buildNavLinks(user) {
   return { adminLink, authLink };
 }
 
+
 function handleHome(req, res, user) {
   const data = loadData();
-  // Ordena a classificação utilizando as estatísticas já armazenadas no arquivo
-  // `classification.json`. Isso preserva as quantidades de jogos, vitórias,
-  // empates e derrotas informadas externamente, mas exibe os clubes
-  // na ordem correta (pontos, vitórias, saldo de gols, gols pró e nome).
-  const sorted = data.classification.slice();
-  sorted.sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    if (b.goal_diff !== a.goal_diff) return b.goal_diff - a.goal_diff;
-    if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
-    const teamA = data.teams.find(t => t.id === a.team_id);
-    const teamB = data.teams.find(t => t.id === b.team_id);
-    return teamA.name.localeCompare(teamB.name);
-  });
-  // Build table rows
+  // Recalcula a classificação dinamicamente a partir de matches com placar definido
+  const played = data.matches.filter(m => m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id));
+  const dynamicTable = computeClassification(data.teams, played);
+  // Monta as linhas usando o mesmo visual
   let rows = '';
-  sorted.forEach((entry, index) => {
+  dynamicTable.forEach((entry, index) => {
     const team = data.teams.find(t => t.id === entry.team_id);
     const pos = index + 1;
     let zoneClass = '';
     if (pos <= 4) zoneClass = 'zone-promotion';
-    else if (pos >= sorted.length - 3) zoneClass = 'zone-relegation';
-    else zoneClass = 'zone-middle';
-    const highlight = team.highlight ? 'highlight-team' : '';
-    // Compute real form (last 5 results) for this team
-    const form = computeTeamForm(entry.team_id, data.matches);
+    else if (pos >= (data.teams.length - 4) + 1) zoneClass = 'zone-relegation';
+    const highlight = team.highlight ? 'highlight' : '';
+    // Últimos 5 jogos (forma) com base em partidas recentes
+    const recent = data.matches
+      .filter(m => (m.home_team_id === team.id || m.away_team_id === team.id) && m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id))
+      .sort((a,b)=> new Date(b.date) - new Date(a.date))
+      .slice(0,5);
+    const form = recent.map(m => {
+      const isHome = m.home_team_id === team.id;
+      const hs = m.home_score, as = m.away_score;
+      let r = '-';
+      if (hs !== null && as !== null) {
+        if ((isHome && hs>as) || (!isHome && as>hs)) r='V';
+        else if ((isHome && hs<as) || (!isHome && as<hs)) r='D';
+        else r='E';
+      }
+      return r;
+    });
     const formHtml = form.map(result => {
       let cls = 'result-draw';
       if (result === 'V') cls = 'result-win';
@@ -414,8 +453,6 @@ function handleHome(req, res, user) {
       else if (result === '-') cls = 'result-none';
       return `<span class="${cls}"></span>`;
     }).join('');
-    // Monta representação do time com um ponto colorido ao invés de logotipo.
-    // Isso garante visual consistente mesmo sem arquivos de escudo.
     const dot = getTeamDot(team);
     const teamLabel = `<div class="team-label">${dot}<span>${team.name}</span></div>`;
     rows += `<tr class="${zoneClass} ${highlight}"><td>${pos}</td>`+
@@ -425,38 +462,21 @@ function handleHome(req, res, user) {
             `<td>${entry.wins}</td>`+
             `<td>${entry.draws}</td>`+
             `<td>${entry.losses}</td>`+
-            `<td>${entry.goals_for}</td>`+
-            `<td>${entry.goals_against}</td>`+
-            `<td>${entry.goal_diff >= 0 ? '+' + entry.goal_diff : entry.goal_diff}</td>`+
-            `<td><div class="form-indicator">${formHtml}</div></td>`+
+            `<td>${entry.goals_for}:${entry.goals_against}</td>`+
+            `<td>${entry.goal_diff}</td>`+
+            `<td>${formHtml}</td>`+
             `</tr>`;
   });
-  const now = new Date().toISOString().split('T')[0];
-  const nav = buildNavLinks(user);
-  // Compute additional stats for hero cards
-  // Determine the position of Criciúma (team marked with highlight flag)
-  let criPosition = '--';
-  for (let i = 0; i < sorted.length; i++) {
-    const team = data.teams.find(t => t.id === sorted[i].team_id);
-    if (team && team.highlight) {
-      criPosition = (i + 1).toString();
-      break;
-    }
-  }
-  // Total number of matches stored (including finalizados e futuros)
-  const totalMatches = data.matches.length.toString();
+  const { adminLink, authLink } = buildNavLinks(user);
   const html = renderTemplate('home.html', {
-    table_rows: rows,
-    last_update: now,
-    admin_link: nav.adminLink,
-    auth_link: nav.authLink,
-    criciuma_position: criPosition,
-    total_matches: totalMatches
+    classification_rows: rows,
+    admin_link: adminLink,
+    auth_link: authLink
   });
-  res.statusCode = 200;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(html);
 }
+
 
 function handleLoginGet(req, res) {
   const html = renderTemplate('login.html', { message: '' });
@@ -770,44 +790,42 @@ function handlePalpitesPost(req, res, user) {
   });
 }
 
+
 function handleRanking(req, res, user) {
   const data = loadData();
-  // Analisa a rodada selecionada (por exemplo, /ranking?round=17)
   const parsedUrl = url.parse(req.url, true);
   const selectedRound = parsedUrl.query.round ? parseInt(parsedUrl.query.round, 10) : null;
-  const presenters = data.users.filter(u => !u.isAdmin);
-  // Busca todos os palpites do banco
-  dbAccess.getPredictions()
-    .then(predsFromDB => {
-      const ranking = [];
-      presenters.forEach(u => {
-        let total = 0;
-        let exactCount = 0;
-        let resultCount = 0;
-        let errorCount = 0;
-        const details = [];
-        // Filtra palpites deste usuário
-        predsFromDB
-          .filter(p => p.user_id === u.id)
-          .forEach(pred => {
-            const match = data.matches.find(m => m.id === pred.match_id);
-            // Se a partida não existe ou está excluída, ignora
-            if (!match || excludedMatchIds.has(match.id)) return;
-            // Se uma rodada específica foi selecionada, ignore partidas de outras rodadas
-            if (selectedRound && match.round !== selectedRound) return;
-            if (match.home_score !== null && match.away_score !== null) {
-              const predSign = resultSign(pred.home_score, pred.away_score);
-              const realSign = resultSign(match.home_score, match.away_score);
-              let points = 0;
-              if (pred.home_score === match.home_score && pred.away_score === match.away_score) {
-                points = 3;
-                exactCount += 1;
-              } else if (predSign === realSign) {
-                points = 1;
-                resultCount += 1;
-              } else {
-                errorCount += 1;
-              }
+  // For ranking, we compute dynamically from matches with results up to selected round (if provided)
+  let matches = data.matches.filter(m => m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id));
+  if (selectedRound) {
+    matches = matches.filter(m => m.round <= selectedRound);
+  }
+  const dataCopy = Object.assign({}, data, { matches });
+  const table = computeClassificationFromMatches(dataCopy);
+  // build rows HTML
+  const teams = data.teams;
+  let rows = '';
+  table.forEach((st, idx) => {
+    const t = teams.find(t => t.id === st.team_id);
+    rows += '<tr>' +
+      '<td>' + (idx+1) + '</td>' +
+      '<td class="team-cell"><span class="team-circle ' + (t.abbr||'') + '"></span>' + t.name + '</td>' +
+      '<td>' + st.games + '</td>' +
+      '<td>' + st.wins + '</td>' +
+      '<td>' + st.draws + '</td>' +
+      '<td>' + st.losses + '</td>' +
+      '<td>' + st.goals_for + ':' + st.goals_against + '</td>' +
+      '<td>' + st.goal_diff + '</td>' +
+      '<td><strong>' + st.points + '</strong></td>' +
+    '</tr>';
+  });
+  const html = renderTemplate('ranking.html', {
+    user,
+    ranking_rows: rows
+  });
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.end(html);
+}
               total += points;
               const homeTeam = data.teams.find(t => t.id === match.home_team_id);
               const awayTeam = data.teams.find(t => t.id === match.away_team_id);
