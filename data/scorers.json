@@ -7,56 +7,57 @@
   },
   {
     "rank": 2,
+    "player": "Carlão",
+    "team_id": 17,
+    "goals": 8
+  },
+  {
+    "rank": 3,
     "player": "Anselmo Ramon",
     "team_id": 1,
     "goals": 7
   },
   {
     "rank": 3,
-    "player": "Carlão",
-    "team_id": 17,
+    "player": "Ramirez K.",
+    "team_id": 20,
+    "goals": 7
+  },
+  {
+    "rank": 5,
+    "player": "Costa Neto",
+    "team_id": 11,
+    "goals": 7
+  },
+  {
+    "rank": 6,
+    "player": "Boschilia",
+    "team_id": 12,
     "goals": 6
   },
   {
-    "rank": 4,
+    "rank": 7,
+    "player": "Diego Gonçalves",
+    "team_id": 10,
+    "goals": 6
+  },
+  {
+    "rank": 7,
     "player": "Mailton",
     "team_id": 4,
     "goals": 6
   },
   {
-    "rank": 5,
-    "player": "Ramirez K.",
-    "team_id": 20,
+    "rank": 9,
+    "player": "Diogo",
+    "team_id": 16,
     "goals": 6
-  },
-  {
-    "rank": 6,
-    "player": "Costa Neto",
-    "team_id": 11,
-    "goals": 6
-  },
-  {
-    "rank": 7,
-    "player": "Josué",
-    "team_id": 2,
-    "goals": 5
-  },
-  {
-    "rank": 8,
-    "player": "Cleber",
-    "team_id": 8,
-    "goals": 5
   },
   {
     "rank": 9,
-    "player": "Diego Gonçalves",
-    "team_id": 10,
-    "goals": 5
-  },
-  {
-    "rank": 10,
-    "player": "Marcelinho",
-    "team_id": 14,
-    "goals": 5
+    "player": "R. Peixoto Nepomuceno",
+    "team_id": 9,
+    "goals": 6
   }
 ]
+
