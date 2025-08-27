@@ -628,99 +628,98 @@
     "away_team_id": 8,
     "home_score": 0,
     "away_score": 0
-  }
-
-  ,{
+  },
+  {
     "id": 71,
     "round": 23,
     "date": "2025-08-22 19:00",
     "home_team_id": 11,
     "away_team_id": 4,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 0,
+    "away_score": 4
+  },
+  {
     "id": 72,
     "round": 23,
     "date": "2025-08-22 21:35",
     "home_team_id": 10,
     "away_team_id": 3,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
     "id": 73,
     "round": 23,
     "date": "2025-08-23 16:00",
     "home_team_id": 2,
     "away_team_id": 7,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 0,
+    "away_score": 0
+  },
+  {
     "id": 74,
     "round": 23,
     "date": "2025-08-23 18:00",
     "home_team_id": 1,
     "away_team_id": 15,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 1,
+    "away_score": 0
+  },
+  {
     "id": 75,
     "round": 23,
     "date": "2025-08-23 20:30",
     "home_team_id": 13,
     "away_team_id": 9,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 0,
+    "away_score": 1
+  },
+  {
     "id": 76,
     "round": 23,
     "date": "2025-08-24 16:00",
     "home_team_id": 16,
     "away_team_id": 12,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 1,
+    "away_score": 2
+  },
+  {
     "id": 77,
     "round": 23,
     "date": "2025-08-24 18:30",
     "home_team_id": 17,
     "away_team_id": 18,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 0,
+    "away_score": 0
+  },
+  {
     "id": 78,
     "round": 23,
     "date": "2025-08-24 20:30",
     "home_team_id": 5,
     "away_team_id": 14,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 2,
+    "away_score": 2
+  },
+  {
     "id": 79,
     "round": 23,
     "date": "2025-08-25 19:00",
     "home_team_id": 19,
     "away_team_id": 6,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
     "id": 80,
     "round": 23,
     "date": "2025-08-25 21:30",
     "home_team_id": 8,
     "away_team_id": 20,
-    "home_score": null,
-    "away_score": null
-  }
-  ,{
+    "home_score": 1,
+    "away_score": 2
+  },
+  {
     "id": 81,
     "round": 24,
     "date": "2025-08-28 21:35",
@@ -728,8 +727,8 @@
     "away_team_id": 10,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 82,
     "round": 24,
     "date": "2025-08-29 19:00",
@@ -737,8 +736,8 @@
     "away_team_id": 2,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 83,
     "round": 24,
     "date": "2025-08-30 16:00",
@@ -746,8 +745,8 @@
     "away_team_id": 16,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 84,
     "round": 24,
     "date": "2025-08-30 18:30",
@@ -755,8 +754,8 @@
     "away_team_id": 19,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 85,
     "round": 24,
     "date": "2025-08-30 20:30",
@@ -764,8 +763,8 @@
     "away_team_id": 3,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 86,
     "round": 24,
     "date": "2025-08-31 16:00",
@@ -773,8 +772,8 @@
     "away_team_id": 20,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 87,
     "round": 24,
     "date": "2025-08-31 18:30",
@@ -782,8 +781,8 @@
     "away_team_id": 11,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 88,
     "round": 24,
     "date": "2025-09-01 19:00",
@@ -791,8 +790,8 @@
     "away_team_id": 6,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 89,
     "round": 24,
     "date": "2025-09-01 21:30",
@@ -800,8 +799,8 @@
     "away_team_id": 5,
     "home_score": null,
     "away_score": null
-  }
-  ,{
+  },
+  {
     "id": 90,
     "round": 24,
     "date": "2025-09-02 19:30",
