@@ -418,61 +418,80 @@ function buildNavLinks(user) {
 
 function handleHome(req, res, user) {
   const data = loadData();
-  // Recalcula a classificação dinamicamente a partir de matches com placar definido
-  const played = data.matches.filter(m => m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id));
+
+  // Considera só partidas com placar definido e NÃO excluídas
+  const played = data.matches.filter(
+    (m) => m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id)
+  );
+
+  // Recalcula a classificação dinâmica a partir dos jogos já disputados
   const dynamicTable = computeClassification(data.teams, played);
-  // Monta as linhas usando o mesmo visual
+
+  // Monta as linhas da tabela (mantendo o mesmo visual)
   let rows = '';
   dynamicTable.forEach((entry, index) => {
-    const team = data.teams.find(t => t.id === entry.team_id);
+    const team = data.teams.find((t) => t.id === entry.team_id);
     const pos = index + 1;
+
     let zoneClass = '';
     if (pos <= 4) zoneClass = 'zone-promotion';
     else if (pos >= (data.teams.length - 4) + 1) zoneClass = 'zone-relegation';
+
     const highlight = team.highlight ? 'highlight' : '';
-    // Últimos 5 jogos (forma) com base em partidas recentes
+
+    // Forma (últimos 5 jogos) baseada nas partidas recentes com placar
     const recent = data.matches
-      .filter(m => (m.home_team_id === team.id || m.away_team_id === team.id) && m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id))
-      .sort((a,b)=> new Date(b.date) - new Date(a.date))
-      .slice(0,5);
-    const form = recent.map(m => {
+      .filter(
+        (m) =>
+          (m.home_team_id === team.id || m.away_team_id === team.id) &&
+          m.home_score !== null &&
+          m.away_score !== null &&
+          !excludedMatchIds.has(m.id)
+      )
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+
+    const form = recent.map((m) => {
       const isHome = m.home_team_id === team.id;
       const hs = m.home_score, as = m.away_score;
-      let r = '-';
-      if (hs !== null && as !== null) {
-        if ((isHome && hs>as) || (!isHome && as>hs)) r='V';
-        else if ((isHome && hs<as) || (!isHome && as<hs)) r='D';
-        else r='E';
-      }
-      return r;
+      if ((isHome && hs > as) || (!isHome && as > hs)) return 'V';
+      if ((isHome && hs < as) || (!isHome && as < hs)) return 'D';
+      return 'E';
     });
-    const formHtml = form.map(result => {
-      let cls = 'result-draw';
-      if (result === 'V') cls = 'result-win';
-      else if (result === 'D') cls = 'result-loss';
-      else if (result === '-') cls = 'result-none';
-      return `<span class="${cls}"></span>`;
-    }).join('');
+
+    const formHtml = form
+      .map((r) => {
+        let cls = 'result-draw';
+        if (r === 'V') cls = 'result-win';
+        else if (r === 'D') cls = 'result-loss';
+        return `<span class="${cls}"></span>`;
+      })
+      .join('');
+
     const dot = getTeamDot(team);
     const teamLabel = `<div class="team-label">${dot}<span>${team.name}</span></div>`;
-    rows += `<tr class="${zoneClass} ${highlight}"><td>${pos}</td>`+
-            `<td>${teamLabel}</td>`+
-            `<td>${entry.points}</td>`+
-            `<td>${entry.games}</td>`+
-            `<td>${entry.wins}</td>`+
-            `<td>${entry.draws}</td>`+
-            `<td>${entry.losses}</td>`+
-            `<td>${entry.goals_for}:${entry.goals_against}</td>`+
-            `<td>${entry.goal_diff}</td>`+
-            `<td>${formHtml}</td>`+
-            `</tr>`;
+
+    rows += `<tr class="${zoneClass} ${highlight}">
+      <td>${pos}</td>
+      <td>${teamLabel}</td>
+      <td>${entry.points}</td>
+      <td>${entry.games}</td>
+      <td>${entry.wins}</td>
+      <td>${entry.draws}</td>
+      <td>${entry.losses}</td>
+      <td>${entry.goals_for}:${entry.goals_against}</td>
+      <td>${entry.goal_diff}</td>
+      <td>${formHtml}</td>
+    </tr>`;
   });
+
   const { adminLink, authLink } = buildNavLinks(user);
   const html = renderTemplate('home.html', {
     classification_rows: rows,
     admin_link: adminLink,
-    auth_link: authLink
+    auth_link: authLink,
   });
+
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(html);
 }
