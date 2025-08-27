@@ -486,8 +486,16 @@ function handleHome(req, res, user) {
   });
 
   const { adminLink, authLink } = buildNavLinks(user);
+  // calcula posição do Criciúma
+  const cricTeam = data.teams.find(t=>t.name==='Criciúma');
+  const cricIndex = dynamicTable.findIndex(e=>e.team_id === (cricTeam && cricTeam.id));
+  const cricPos = cricIndex >=0 ? (cricIndex+1).toString() : '-';
+  const lastUpdate = new Date().toISOString().slice(0,10);
   const html = renderTemplate('home.html', {
-    classification_rows: rows,
+    table_rows: rows,
+    criciuma_position: cricPos,
+    last_update: lastUpdate,
+    
     admin_link: adminLink,
     auth_link: authLink,
   });
@@ -840,7 +848,7 @@ function handleRanking(req, res, user) {
   });
   const html = renderTemplate('ranking.html', {
     user,
-    ranking_rows: rows
+    ranking_cards: rows
   });
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(html);
