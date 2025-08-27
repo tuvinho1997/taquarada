@@ -1384,5 +1384,215 @@
     "user_id": 3,
     "home_score": 1,
     "away_score": 0
+  },
+  {
+    "id": 289,
+    "match_id": 71,
+    "user_id": 1,
+    "home_score": 0,
+    "away_score": 2
+  },
+  {
+    "id": 290,
+    "match_id": 71,
+    "user_id": 2,
+    "home_score": 1,
+    "away_score": 1
+  },
+  {
+    "id": 291,
+    "match_id": 71,
+    "user_id": 3,
+    "home_score": 0,
+    "away_score": 1
+  },
+  {
+    "id": 292,
+    "match_id": 72,
+    "user_id": 1,
+    "home_score": 1,
+    "away_score": 0
+  },
+  {
+    "id": 293,
+    "match_id": 72,
+    "user_id": 2,
+    "home_score": 2,
+    "away_score": 1
+  },
+  {
+    "id": 294,
+    "match_id": 72,
+    "user_id": 3,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 295,
+    "match_id": 73,
+    "user_id": 1,
+    "home_score": 2,
+    "away_score": 1
+  },
+  {
+    "id": 296,
+    "match_id": 73,
+    "user_id": 2,
+    "home_score": 3,
+    "away_score": 0
+  },
+  {
+    "id": 297,
+    "match_id": 73,
+    "user_id": 3,
+    "home_score": 1,
+    "away_score": 1
+  },
+  {
+    "id": 298,
+    "match_id": 74,
+    "user_id": 1,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 299,
+    "match_id": 74,
+    "user_id": 2,
+    "home_score": 1,
+    "away_score": 1
+  },
+  {
+    "id": 300,
+    "match_id": 74,
+    "user_id": 3,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 301,
+    "match_id": 75,
+    "user_id": 1,
+    "home_score": 1,
+    "away_score": 1
+  },
+  {
+    "id": 302,
+    "match_id": 75,
+    "user_id": 2,
+    "home_score": 1,
+    "away_score": 0
+  },
+  {
+    "id": 303,
+    "match_id": 75,
+    "user_id": 3,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 304,
+    "match_id": 76,
+    "user_id": 1,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 305,
+    "match_id": 76,
+    "user_id": 2,
+    "home_score": 3,
+    "away_score": 1
+  },
+  {
+    "id": 306,
+    "match_id": 76,
+    "user_id": 3,
+    "home_score": 1,
+    "away_score": 0
+  },
+  {
+    "id": 307,
+    "match_id": 77,
+    "user_id": 1,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 308,
+    "match_id": 77,
+    "user_id": 2,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 309,
+    "match_id": 77,
+    "user_id": 3,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 310,
+    "match_id": 78,
+    "user_id": 1,
+    "home_score": 2,
+    "away_score": 0
+  },
+  {
+    "id": 311,
+    "match_id": 78,
+    "user_id": 2,
+    "home_score": 1,
+    "away_score": 0
+  },
+  {
+    "id": 312,
+    "match_id": 78,
+    "user_id": 3,
+    "home_score": 1,
+    "away_score": 0
+  },
+  {
+    "id": 313,
+    "match_id": 79,
+    "user_id": 1,
+    "home_score": 1,
+    "away_score": 2
+  },
+  {
+    "id": 314,
+    "match_id": 79,
+    "user_id": 2,
+    "home_score": 1,
+    "away_score": 1
+  },
+  {
+    "id": 315,
+    "match_id": 79,
+    "user_id": 3,
+    "home_score": 1,
+    "away_score": 1
+  },
+  {
+    "id": 316,
+    "match_id": 80,
+    "user_id": 1,
+    "home_score": 3,
+    "away_score": 0
+  },
+  {
+    "id": 317,
+    "match_id": 80,
+    "user_id": 2,
+    "home_score": 3,
+    "away_score": 1
+  },
+  {
+    "id": 318,
+    "match_id": 80,
+    "user_id": 3,
+    "home_score": 1,
+    "away_score": 2
   }
 ]
