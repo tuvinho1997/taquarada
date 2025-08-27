@@ -416,93 +416,86 @@ function buildNavLinks(user) {
 }
 
 
+
 function handleHome(req, res, user) {
-  const data = loadData();
+  const data = loadData(); // includes teams, matches, classification (snapshot)
+  const snapshot = data.classification || []; // array of {team_id, points, games, wins, draws, losses, goals_for, goals_against, goal_diff}
 
-  // Considera só partidas com placar definido e NÃO excluídas
-  const played = data.matches.filter(
-    (m) => m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id)
-  );
-
-  // Recalcula a classificação dinâmica a partir dos jogos já disputados
-  const dynamicTable = computeClassification(data.teams, played);
-
-  // Monta as linhas da tabela (mantendo o mesmo visual)
+  // Monta linhas da tabela com o MESMO layout da home
   let rows = '';
-  dynamicTable.forEach((entry, index) => {
-    const team = data.teams.find((t) => t.id === entry.team_id);
-    const pos = index + 1;
+  const byTeamId = new Map();
+  data.teams.forEach(t => byTeamId.set(t.id, t));
+
+  // Ordena por pontos (desc) e depois saldo, vitórias, gols pró (igual a computeClassification fazia)
+  const ordered = snapshot.slice().sort((a,b)=>{
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.goal_diff !== a.goal_diff) return b.goal_diff - a.goal_diff;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    return b.goals_for - a.goals_for;
+  });
+
+  // Para a coluna "Forma", podemos recomputar com base nos 5 últimos jogos disputados por cada time
+  function last5Form(teamId) {
+    const recent = data.matches
+      .filter(m => (m.home_team_id===teamId || m.away_team_id===teamId) && m.home_score!==null && m.away_score!==null && !excludedMatchIds.has(m.id))
+      .sort((a,b)=> new Date(b.date) - new Date(a.date))
+      .slice(0,5);
+    return recent.map(m => {
+      const isHome = m.home_team_id===teamId;
+      const hs=m.home_score, as=m.away_score;
+      if ((isHome && hs>as) || (!isHome && as>hs)) return 'V';
+      if ((isHome && hs<as) || (!isHome && as<hs)) return 'D';
+      return 'E';
+    });
+  }
+
+  ordered.forEach((st, idx) => {
+    const team = byTeamId.get(st.team_id);
+    const dot = getTeamDot(team);
+    const teamLabel = `<div class="team-label">${dot}<span>${team.name}</span></div>`;
+    const pos = idx + 1;
 
     let zoneClass = '';
     if (pos <= 4) zoneClass = 'zone-promotion';
     else if (pos >= (data.teams.length - 4) + 1) zoneClass = 'zone-relegation';
 
     const highlight = team.highlight ? 'highlight' : '';
-
-    // Forma (últimos 5 jogos) baseada nas partidas recentes com placar
-    const recent = data.matches
-      .filter(
-        (m) =>
-          (m.home_team_id === team.id || m.away_team_id === team.id) &&
-          m.home_score !== null &&
-          m.away_score !== null &&
-          !excludedMatchIds.has(m.id)
-      )
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5);
-
-    const form = recent.map((m) => {
-      const isHome = m.home_team_id === team.id;
-      const hs = m.home_score, as = m.away_score;
-      if ((isHome && hs > as) || (!isHome && as > hs)) return 'V';
-      if ((isHome && hs < as) || (!isHome && as < hs)) return 'D';
-      return 'E';
-    });
-
-    const formHtml = form
-      .map((r) => {
-        let cls = 'result-draw';
-        if (r === 'V') cls = 'result-win';
-        else if (r === 'D') cls = 'result-loss';
-        return `<span class="${cls}"></span>`;
-      })
-      .join('');
-
-    const dot = getTeamDot(team);
-    const teamLabel = `<div class="team-label">${dot}<span>${team.name}</span></div>`;
+    const formHtml = last5Form(team.id).map(r => {
+      let cls='result-draw'; if (r==='V') cls='result-win'; else if (r==='D') cls='result-loss';
+      return `<span class="${cls}"></span>`;
+    }).join('');
 
     rows += `<tr class="${zoneClass} ${highlight}">
       <td>${pos}</td>
       <td>${teamLabel}</td>
-      <td>${entry.points}</td>
-      <td>${entry.games}</td>
-      <td>${entry.wins}</td>
-      <td>${entry.draws}</td>
-      <td>${entry.losses}</td>
-      <td>${entry.goals_for}:${entry.goals_against}</td>
-      <td>${entry.goal_diff}</td>
+      <td>${st.points}</td>
+      <td>${st.games}</td>
+      <td>${st.wins}</td>
+      <td>${st.draws}</td>
+      <td>${st.losses}</td>
+      <td>${st.goals_for}:${st.goals_against}</td>
+      <td>${st.goal_diff}</td>
       <td>${formHtml}</td>
     </tr>`;
   });
 
-  const { adminLink, authLink } = buildNavLinks(user);
-  // calcula posição do Criciúma
   const cricTeam = data.teams.find(t=>t.name==='Criciúma');
-  const cricIndex = dynamicTable.findIndex(e=>e.team_id === (cricTeam && cricTeam.id));
-  const cricPos = cricIndex >=0 ? (cricIndex+1).toString() : '-';
+  const cricIndex = ordered.findIndex(e=> e.team_id === (cricTeam && cricTeam.id));
+  const cricPos = cricIndex>=0 ? (cricIndex+1).toString() : '-';
   const lastUpdate = new Date().toISOString().slice(0,10);
+
+  const { adminLink, authLink } = buildNavLinks(user);
   const html = renderTemplate('home.html', {
     table_rows: rows,
-    criciuma_position: cricPos,
-    last_update: lastUpdate,
-    
     admin_link: adminLink,
     auth_link: authLink,
+    criciuma_position: cricPos,
+    last_update: lastUpdate
   });
-
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(html);
 }
+
 
 
 function handleLoginGet(req, res) {
@@ -818,41 +811,113 @@ function handlePalpitesPost(req, res, user) {
 }
 
 
+
 function handleRanking(req, res, user) {
   const data = loadData();
   const parsedUrl = url.parse(req.url, true);
   const selectedRound = parsedUrl.query.round ? parseInt(parsedUrl.query.round, 10) : null;
-  // For ranking, we compute dynamically from matches with results up to selected round (if provided)
-  let matches = data.matches.filter(m => m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id));
-  if (selectedRound) {
-    matches = matches.filter(m => m.round <= selectedRound);
-  }
-  const dataCopy = Object.assign({}, data, { matches });
-  const table = computeClassificationFromMatches(dataCopy);
-  // build rows HTML
-  const teams = data.teams;
-  let rows = '';
-  table.forEach((st, idx) => {
-    const t = teams.find(t => t.id === st.team_id);
-    rows += '<tr>' +
-      '<td>' + (idx+1) + '</td>' +
-      '<td class="team-cell"><span class="team-circle ' + (t.abbr||'') + '"></span>' + t.name + '</td>' +
-      '<td>' + st.games + '</td>' +
-      '<td>' + st.wins + '</td>' +
-      '<td>' + st.draws + '</td>' +
-      '<td>' + st.losses + '</td>' +
-      '<td>' + st.goals_for + ':' + st.goals_against + '</td>' +
-      '<td>' + st.goal_diff + '</td>' +
-      '<td><strong>' + st.points + '</strong></td>' +
-    '</tr>';
+
+  // Considera somente partidas com placar definido
+  const matchesById = new Map();
+  data.matches.forEach(m => {
+    if (m.home_score !== null && m.away_score !== null && !excludedMatchIds.has(m.id)) {
+      if (!selectedRound || m.round <= selectedRound) {
+        matchesById.set(m.id, m);
+      }
+    }
   });
+
+  // Apresentadores (não-admin)
+  const presenters = data.users.filter(u => !u.isAdmin);
+
+  // Agrupar palpites válidos por usuário e por rodada
+  const predsByUser = {};
+  presenters.forEach(u => predsByUser[u.id] = []);
+  data.predictions.forEach(p => {
+    const match = matchesById.get(p.match_id);
+    if (!match) return; // ignora jogos sem resultado ou fora do filtro de rodada
+    predsByUser[p.user_id]?.push({ pred: p, match });
+  });
+
+  // Função para pontuar um palpite
+  function score(pred, match) {
+    const hs = pred.home_score, as = pred.away_score;
+    if (hs === null || as === null) return 0;
+    const exact = (hs === match.home_score && as === match.away_score);
+    if (exact) return 3;
+    const sign = (x, y) => (x>y?1:(x<y?-1:0));
+    const same = sign(hs, as) === sign(match.home_score, match.away_score);
+    return same ? 1 : 0;
+  }
+
+  // Acumular pontuação total e por rodada
+  const ranking = [];
+  const rounds = Array.from(new Set(Array.from(matchesById.values()).map(m => m.round))).sort((a,b)=>a-b);
+  const series = {}; // para o gráfico: userName -> [pts acumulados por rodada]
+  presenters.forEach(u => {
+    let total = 0;
+    let exactCount = 0, resultCount = 0, errorCount = 0;
+
+    const byRound = new Map();
+    rounds.forEach(r => byRound.set(r, 0));
+
+    (predsByUser[u.id] || []).forEach(({pred, match}) => {
+      const pts = score(pred, match);
+      total += pts;
+      if (pts === 3) exactCount++;
+      else if (pts === 1) resultCount++;
+      else errorCount++;
+      byRound.set(match.round, (byRound.get(match.round) || 0) + pts);
+    });
+
+    // série acumulada por rodada
+    let acc = 0;
+    series[u.name] = rounds.map(r => { acc += (byRound.get(r) || 0); return acc; });
+
+    ranking.push({ user: u, total, exactCount, resultCount, errorCount });
+  });
+
+  // Ordena ranking por total desc
+  ranking.sort((a,b)=> b.total - a.total || a.user.name.localeCompare(b.user.name));
+
+  // Round selector
+  const roundOptions = ['<option value="">Geral</option>'].concat(rounds.map(r => {
+    const sel = (selectedRound === r) ? ' selected' : '';
+    return `<option value="${r}"${sel}>Rodada ${r}</option>`;
+  }));
+  const roundSelector = `<label>Rodada: <select onchange="location.href='/ranking?round='+this.value">${roundOptions.join('')}</select></label>`;
+
+  // Monta cartões (cards) do ranking
+  let cards = '';
+  ranking.forEach((r, idx) => {
+    const pos = idx+1;
+    const medal = pos===1 ? '🥇' : pos===2 ? '🥈' : pos===3 ? '🥉' : '';
+    const header = `<div class="card-header" onclick="toggleCard(${idx})">
+        <span class="pos">${pos}</span>
+        <span class="user-name">${r.user.name}</span>
+        <span class="score"><strong>${r.total}</strong> pts ${medal}</span>
+      </div>`;
+    const body = `<div class="card-body" id="card-body-${idx}" style="display:none">
+        <p>Exatos: ${r.exactCount} • Resultados: ${r.resultCount} • Erros: ${r.errorCount}</p>
+      </div>`;
+    cards += `<div class="ranking-card">${header}${body}</div>`;
+  });
+
+  // Dados do gráfico
+  const chartData = JSON.stringify({ rounds, series });
+
+  const { adminLink, authLink } = buildNavLinks(user);
   const html = renderTemplate('ranking.html', {
-    user,
-    ranking_cards: rows
+    admin_link: adminLink,
+    auth_link: authLink,
+    round_selector: roundSelector,
+    ranking_cards: cards,
+    chart_data: chartData
   });
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(html);
 }
+
 function handleResultados(req, res, user) {
   const data = loadData();
   // Agrupa partidas por rodada, incluindo jogos sem placar definido. Isso
