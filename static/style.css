@@ -491,3 +491,10 @@ footer {
   }
 }
 
+
+/* Estilo para pontuação da última rodada */
+.last-round-points {
+  color: #28a745;
+  font-weight: bold;
+}
+
