@@ -42,8 +42,9 @@
     {{ranking_cards}}
 
     <!-- Gráfico de evolução dos apresentadores -->
-    <div class="chart-wrapper" style="margin-top:2rem;">
+    <div class="chart-wrapper" style="margin-top:2rem; position: relative;">
       <h3>Evolução dos apresentadores por rodada</h3>
+      <img src="/static/heineken_premio.webp" alt="Prêmio Heineken" style="position: absolute; top: 50px; right: 20px; width: 80px; height: auto; opacity: 0.8; z-index: 10;">
       <canvas id="ranking-chart" width="900" height="400" style="max-width:100%;"></canvas>
     </div>
     <script>
