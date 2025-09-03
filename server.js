@@ -846,7 +846,18 @@ function handleRanking(req, res, user) {
           detailsRows += `<tr><td>${d.round}</td><td>${d.confrontation}</td><td>${d.prediction}</td><td>${d.result}</td><td>${d.points}</td></tr>`;
         });
         const detailsTable = `<table><thead><tr><th>Rodada</th><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
-        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${place}º ${u.name} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
+        
+        // Calcular pontuação da última rodada para ranking geral
+        let lastRoundPoints = '';
+        if (!selectedRound) { // Apenas no ranking geral
+          // Encontrar a última rodada com jogos finalizados
+          const lastRound = Math.max(...entry.details.map(d => d.round));
+          const lastRoundDetails = entry.details.filter(d => d.round === lastRound);
+          const lastRoundTotal = lastRoundDetails.reduce((sum, d) => sum + d.points, 0);
+          lastRoundPoints = ` <span class="last-round-points">(+${lastRoundTotal})</span>`;
+        }
+        
+        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${place}º ${u.name}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
       // ============================================
       // Construção dos dados para o gráfico de evolução
@@ -969,7 +980,18 @@ function handleRanking(req, res, user) {
           detailsRows += `<tr><td>${d.round}</td><td>${d.confrontation}</td><td>${d.prediction}</td><td>${d.result}</td><td>${d.points}</td></tr>`;
         });
         const detailsTable = `<table><thead><tr><th>Rodada</th><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
-        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${idx + 1}º ${u.name} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
+        
+        // Calcular pontuação da última rodada para ranking geral (fallback)
+        let lastRoundPoints = '';
+        if (!selectedRound) { // Apenas no ranking geral
+          // Encontrar a última rodada com jogos finalizados
+          const lastRound = Math.max(...entry.details.map(d => d.round));
+          const lastRoundDetails = entry.details.filter(d => d.round === lastRound);
+          const lastRoundTotal = lastRoundDetails.reduce((sum, d) => sum + d.points, 0);
+          lastRoundPoints = ` <span class="last-round-points">(+${lastRoundTotal})</span>`;
+        }
+        
+        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${idx + 1}º ${u.name}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
       // ============================================
       // Construção dos dados para o gráfico na via de fallback
