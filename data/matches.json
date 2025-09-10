@@ -816,8 +816,8 @@
     "date": "2025-09-05 17:00",
     "home_team_id": 20,
     "away_team_id": 7,
-    "home_score": null,
-    "away_score": null
+    "home_score": 1,
+    "away_score": 3
   }
   ,{
     "id": 92,
@@ -825,8 +825,8 @@
     "date": "2025-09-05 19:00",
     "home_team_id": 16,
     "away_team_id": 18,
-    "home_score": null,
-    "away_score": null
+    "home_score": 1,
+    "away_score": 2
   }
   ,{
     "id": 93,
@@ -834,8 +834,8 @@
     "date": "2025-09-05 21:30",
     "home_team_id": 2,
     "away_team_id": 17,
-    "home_score": null,
-    "away_score": null
+    "home_score": 4,
+    "away_score": 0
   }
   ,{
     "id": 94,
@@ -843,8 +843,8 @@
     "date": "2025-09-06 16:00",
     "home_team_id": 19,
     "away_team_id": 9,
-    "home_score": null,
-    "away_score": null
+    "home_score": 1,
+    "away_score": 3
   }
   ,{
     "id": 95,
@@ -852,8 +852,8 @@
     "date": "2025-09-07 16:00",
     "home_team_id": 10,
     "away_team_id": 4,
-    "home_score": null,
-    "away_score": null
+    "home_score": 2,
+    "away_score": 0
   }
   ,{
     "id": 96,
@@ -861,8 +861,8 @@
     "date": "2025-09-07 18:30",
     "home_team_id": 15,
     "away_team_id": 12,
-    "home_score": null,
-    "away_score": null
+    "home_score": 1,
+    "away_score": 1
   }
   ,{
     "id": 97,
@@ -870,8 +870,8 @@
     "date": "2025-09-07 20:30",
     "home_team_id": 8,
     "away_team_id": 1,
-    "home_score": null,
-    "away_score": null
+    "home_score": 2,
+    "away_score": 1
   }
   ,{
     "id": 98,
@@ -879,8 +879,8 @@
     "date": "2025-09-08 19:30",
     "home_team_id": 3,
     "away_team_id": 14,
-    "home_score": null,
-    "away_score": null
+    "home_score": 1,
+    "away_score": 1
   }
   ,{
     "id": 99,
@@ -888,8 +888,8 @@
     "date": "2025-09-08 20:00",
     "home_team_id": 5,
     "away_team_id": 13,
-    "home_score": null,
-    "away_score": null
+    "home_score": 1,
+    "away_score": 0
   }
   ,{
     "id": 100,
@@ -897,6 +897,96 @@
     "date": "2025-09-08 21:30",
     "home_team_id": 6,
     "away_team_id": 11,
+    "home_score": 1,
+    "away_score": 1
+  }
+  ,{
+    "id": 101,
+    "round": 26,
+    "date": "2025-09-12 19:00",
+    "home_team_id": 18,
+    "away_team_id": 10,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 102,
+    "round": 26,
+    "date": "2025-09-12 21:30",
+    "home_team_id": 2,
+    "away_team_id": 1,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 103,
+    "round": 26,
+    "date": "2025-09-13 16:00",
+    "home_team_id": 16,
+    "away_team_id": 15,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 104,
+    "round": 26,
+    "date": "2025-09-13 18:30",
+    "home_team_id": 6,
+    "away_team_id": 7,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 105,
+    "round": 26,
+    "date": "2025-09-14 16:00",
+    "home_team_id": 12,
+    "away_team_id": 5,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 106,
+    "round": 26,
+    "date": "2025-09-14 18:30",
+    "home_team_id": 11,
+    "away_team_id": 19,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 107,
+    "round": 26,
+    "date": "2025-09-15 19:00",
+    "home_team_id": 17,
+    "away_team_id": 3,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 108,
+    "round": 26,
+    "date": "2025-09-15 21:30",
+    "home_team_id": 13,
+    "away_team_id": 20,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 109,
+    "round": 26,
+    "date": "2025-09-16 19:30",
+    "home_team_id": 14,
+    "away_team_id": 8,
+    "home_score": null,
+    "away_score": null
+  }
+  ,{
+    "id": 110,
+    "round": 26,
+    "date": "2025-09-16 21:35",
+    "home_team_id": 4,
+    "away_team_id": 9,
     "home_score": null,
     "away_score": null
   }
