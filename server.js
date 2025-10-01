@@ -770,6 +770,216 @@ function handlePalpitesPost(req, res, user) {
   });
 }
 
+// Função para encontrar a última rodada com pontuação
+function getLastRoundWithPoints(matches, predictions) {
+  // Encontrar todas as rodadas que têm partidas finalizadas
+  const roundsWithResults = new Set();
+  
+  matches.forEach(match => {
+    if (match.home_score !== null && match.away_score !== null) {
+      roundsWithResults.add(match.round);
+    }
+  });
+  
+  // Encontrar a rodada mais recente
+  const sortedRounds = Array.from(roundsWithResults).sort((a, b) => b - a);
+  return sortedRounds.length > 0 ? sortedRounds[0] : null;
+}
+
+// Função para calcular pontos de um palpite
+function calculatePredictionPoints(prediction, match) {
+  if (match.home_score === null || match.away_score === null) {
+    return { points: 0, status: 'pending' };
+  }
+  
+  const predHome = prediction.home_score;
+  const predAway = prediction.away_score;
+  const realHome = match.home_score;
+  const realAway = match.away_score;
+  
+  // Resultado exato: 3 pontos
+  if (predHome === realHome && predAway === realAway) {
+    return { points: 3, status: 'exact' };
+  }
+  
+  // Resultado correto (vencedor/empate): 1 ponto
+  const predSign = predHome > predAway ? 'home' : predHome < predAway ? 'away' : 'draw';
+  const realSign = realHome > realAway ? 'home' : realHome < realAway ? 'away' : 'draw';
+  
+  if (predSign === realSign) {
+    return { points: 1, status: 'result' };
+  }
+  
+  // Erro: 0 pontos
+  return { points: 0, status: 'wrong' };
+}
+
+// Nova função para lidar com detalhes do apresentador
+function handlePresenterDetail(req, res, user) {
+  const data = loadData();
+  const parsedUrl = url.parse(req.url, true);
+  const presenterId = parseInt(parsedUrl.query.id, 10);
+  
+  if (!presenterId) {
+    res.statusCode = 400;
+    res.end('ID do apresentador não fornecido');
+    return;
+  }
+  
+  const presenter = data.users.find(u => u.id === presenterId && !u.isAdmin);
+  if (!presenter) {
+    res.statusCode = 404;
+    res.end('Apresentador não encontrado');
+    return;
+  }
+  
+  // Buscar palpites do banco
+  dbAccess.getPredictions()
+    .then(predsFromDB => {
+      // Encontrar a última rodada com pontuação
+      const lastRound = getLastRoundWithPoints(data.matches, predsFromDB);
+      
+      if (!lastRound) {
+        res.statusCode = 404;
+        res.end('Nenhuma rodada com resultados encontrada');
+        return;
+      }
+      
+      // Filtrar partidas da última rodada
+      const lastRoundMatches = data.matches
+        .filter(m => m.round === lastRound && !excludedMatchIds.has(m.id))
+        .sort((a, b) => a.id - b.id);
+      
+      // Buscar palpites do apresentador para a última rodada
+      const presenterPredictions = predsFromDB.filter(p => 
+        p.user_id === presenterId && 
+        lastRoundMatches.some(m => m.id === p.match_id)
+      );
+      
+      // Gerar HTML dos jogos individuais
+      let matchesHtml = '';
+      let totalPoints = 0;
+      
+      lastRoundMatches.forEach((match, index) => {
+        const homeTeam = data.teams.find(t => t.id === match.home_team_id);
+        const awayTeam = data.teams.find(t => t.id === match.away_team_id);
+        const prediction = presenterPredictions.find(p => p.match_id === match.id);
+        
+        if (prediction) {
+          const pointsData = calculatePredictionPoints(prediction, match);
+          totalPoints += pointsData.points;
+          
+          const statusClass = pointsData.status === 'exact' ? 'points-exact' : 
+                             pointsData.status === 'result' ? 'points-result' : 'points-wrong';
+          
+          const statusText = pointsData.status === 'exact' ? 'EXATO' : 
+                            pointsData.status === 'result' ? 'RESULTADO' : 'ERRO';
+          
+          matchesHtml += `
+            <div class="match-card">
+              <div class="match-header">
+                <div class="match-teams">
+                  <span class="match-number">${index + 1}</span>
+                  ${homeTeam.name} x ${awayTeam.name}
+                </div>
+                <div class="match-result">${match.home_score} x ${match.away_score}</div>
+              </div>
+              <div class="match-details">
+                <div class="detail-item prediction">
+                  <div class="detail-label">Palpite</div>
+                  <div class="detail-value">${prediction.home_score} x ${prediction.away_score}</div>
+                </div>
+                <div class="detail-item points">
+                  <div class="detail-label">Pontos</div>
+                  <div class="detail-value ${statusClass}">${pointsData.points}</div>
+                </div>
+                <div class="detail-item status">
+                  <div class="detail-label">Status</div>
+                  <div class="detail-value ${statusClass}">${statusText}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      });
+      
+      // Gerar tabela resumo comparativa
+      const allPresenters = data.users.filter(u => !u.isAdmin);
+      let presentersHeaders = '';
+      allPresenters.forEach(p => {
+        const isCurrentPresenter = p.id === presenterId;
+        const headerClass = isCurrentPresenter ? 'presenter-column' : '';
+        presentersHeaders += `<th class="${headerClass}">${p.name}</th>`;
+      });
+      
+      let summaryRows = '';
+      let presenterTotals = {};
+      allPresenters.forEach(p => { presenterTotals[p.id] = 0; });
+      
+      lastRoundMatches.forEach((match, index) => {
+        const homeTeam = data.teams.find(t => t.id === match.home_team_id);
+        const awayTeam = data.teams.find(t => t.id === match.away_team_id);
+        
+        let row = `
+          <tr>
+            <td><strong>Jogo ${index + 1}</strong><br><small>${homeTeam.name} x ${awayTeam.name}</small></td>
+            <td><strong>${match.home_score} x ${match.away_score}</strong></td>
+        `;
+        
+        allPresenters.forEach(p => {
+          const pred = predsFromDB.find(pr => pr.match_id === match.id && pr.user_id === p.id);
+          const isCurrentPresenter = p.id === presenterId;
+          const cellClass = isCurrentPresenter ? 'presenter-column' : '';
+          
+          if (pred) {
+            const pointsData = calculatePredictionPoints(pred, match);
+            presenterTotals[p.id] += pointsData.points;
+            
+            const statusClass = pointsData.status === 'exact' ? 'points-exact' : 
+                               pointsData.status === 'result' ? 'points-result' : 'points-wrong';
+            
+            row += `<td class="${cellClass}"><strong>${pred.home_score}x${pred.away_score}</strong><br><span class="${statusClass}">${pointsData.points} pts</span></td>`;
+          } else {
+            row += `<td class="${cellClass}">-</td>`;
+          }
+        });
+        
+        row += '</tr>';
+        summaryRows += row;
+      });
+      
+      // Linha de totais
+      let totalPointsRow = '';
+      allPresenters.forEach(p => {
+        const isCurrentPresenter = p.id === presenterId;
+        const cellClass = isCurrentPresenter ? 'presenter-column' : '';
+        totalPointsRow += `<td class="${cellClass}"><strong>${presenterTotals[p.id]} pontos</strong></td>`;
+      });
+      
+      const nav = buildNavLinks(user);
+      const html = renderTemplate('presenter_detail.html', {
+        presenter_name: presenter.name,
+        round_name: `Rodada ${lastRound}`,
+        total_points: totalPoints,
+        matches_html: matchesHtml,
+        presenters_headers: presentersHeaders,
+        summary_rows: summaryRows,
+        total_points_row: totalPointsRow,
+        admin_link: nav.adminLink,
+        auth_link: nav.authLink
+      });
+      
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.end(html);
+    })
+    .catch(err => {
+      console.error('Erro ao buscar palpites:', err);
+      res.statusCode = 500;
+      res.end('Erro interno do servidor');
+    });
+}
+
 function handleRanking(req, res, user) {
   const data = loadData();
   // Analisa a rodada selecionada (por exemplo, /ranking?round=17)
@@ -857,7 +1067,12 @@ function handleRanking(req, res, user) {
           lastRoundPoints = ` <span class="last-round-points">(+${lastRoundTotal})</span>`;
         }
         
-        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${place}º ${u.name}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
+        // Criar link clicável para o nome do apresentador apenas no ranking geral
+        const presenterName = !selectedRound ? 
+          `<a href="/presenter-detail?id=${u.id}" class="presenter-link">${u.name}</a>` : 
+          u.name;
+        
+        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${place}º ${presenterName}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
       // ============================================
       // Construção dos dados para o gráfico de evolução
@@ -991,7 +1206,12 @@ function handleRanking(req, res, user) {
           lastRoundPoints = ` <span class="last-round-points">(+${lastRoundTotal})</span>`;
         }
         
-        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${idx + 1}º ${u.name}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
+        // Criar link clicável para o nome do apresentador apenas no ranking geral (fallback)
+        const presenterName = !selectedRound ? 
+          `<a href="/presenter-detail?id=${u.id}" class="presenter-link">${u.name}</a>` : 
+          u.name;
+        
+        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${idx + 1}º ${presenterName}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
       // ============================================
       // Construção dos dados para o gráfico na via de fallback
@@ -1445,6 +1665,10 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/ranking' && method === 'GET') {
     handleRanking(req, res, user);
+    return;
+  }
+  if (pathname === '/presenter-detail' && method === 'GET') {
+    handlePresenterDetail(req, res, user);
     return;
   }
   if (pathname === '/resultados' && method === 'GET') {
