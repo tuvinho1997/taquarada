@@ -2,221 +2,221 @@
   {
     "team_id": 2,
     "points": 50,
-    "matches": 29,
     "wins": 14,
     "draws": 8,
     "losses": 7,
     "goals_for": 30,
     "goals_against": 19,
-    "goal_difference": 11
+    "games": 29,
+    "goal_diff": 11
   },
   {
     "team_id": 1,
     "points": 50,
-    "matches": 29,
     "wins": 14,
     "draws": 8,
     "losses": 7,
     "goals_for": 34,
     "goals_against": 26,
-    "goal_difference": 8
+    "games": 29,
+    "goal_diff": 8
   },
   {
     "team_id": 10,
     "points": 49,
-    "matches": 29,
     "wins": 14,
     "draws": 7,
     "losses": 8,
     "goals_for": 38,
     "goals_against": 25,
-    "goal_difference": 13
+    "games": 29,
+    "goal_diff": 13
   },
   {
     "team_id": 9,
     "points": 48,
-    "matches": 29,
     "wins": 14,
     "draws": 6,
     "losses": 9,
     "goals_for": 43,
     "goals_against": 36,
-    "goal_difference": 7
+    "games": 29,
+    "goal_diff": 7
   },
   {
     "team_id": 3,
     "points": 47,
-    "matches": 29,
     "wins": 12,
     "draws": 11,
     "losses": 6,
     "goals_for": 32,
     "goals_against": 26,
-    "goal_difference": 6
+    "games": 29,
+    "goal_diff": 6
   },
   {
     "team_id": 5,
     "points": 45,
-    "matches": 29,
     "wins": 12,
     "draws": 9,
     "losses": 8,
     "goals_for": 36,
     "goals_against": 33,
-    "goal_difference": 3
+    "games": 29,
+    "goal_diff": 3
   },
   {
     "team_id": 4,
     "points": 44,
-    "matches": 29,
     "wins": 13,
     "draws": 5,
     "losses": 11,
     "goals_for": 41,
     "goals_against": 30,
-    "goal_difference": 11
+    "games": 29,
+    "goal_diff": 11
   },
   {
     "team_id": 7,
     "points": 42,
-    "matches": 29,
     "wins": 10,
     "draws": 12,
     "losses": 7,
     "goals_for": 33,
     "goals_against": 28,
-    "goal_difference": 5
+    "games": 29,
+    "goal_diff": 5
   },
   {
     "team_id": 14,
     "points": 42,
-    "matches": 29,
     "wins": 10,
     "draws": 12,
     "losses": 7,
     "goals_for": 31,
     "goals_against": 28,
-    "goal_difference": 3
+    "games": 29,
+    "goal_diff": 3
   },
   {
     "team_id": 13,
     "points": 40,
-    "matches": 29,
     "wins": 12,
     "draws": 4,
     "losses": 13,
     "goals_for": 33,
     "goals_against": 30,
-    "goal_difference": 3
+    "games": 29,
+    "goal_diff": 3
   },
   {
     "team_id": 8,
     "points": 40,
-    "matches": 29,
     "wins": 10,
     "draws": 10,
     "losses": 9,
     "goals_for": 36,
     "goals_against": 32,
-    "goal_difference": 4
+    "games": 29,
+    "goal_diff": 4
   },
   {
     "team_id": 12,
     "points": 39,
-    "matches": 29,
     "wins": 10,
     "draws": 9,
     "losses": 10,
     "goals_for": 31,
     "goals_against": 28,
-    "goal_difference": 3
+    "games": 29,
+    "goal_diff": 3
   },
   {
     "team_id": 6,
     "points": 38,
-    "matches": 29,
     "wins": 10,
     "draws": 8,
     "losses": 11,
     "goals_for": 29,
     "goals_against": 31,
-    "goal_difference": -2
+    "games": 29,
+    "goal_diff": -2
   },
   {
     "team_id": 17,
     "points": 36,
-    "matches": 29,
     "wins": 8,
     "draws": 12,
     "losses": 9,
     "goals_for": 33,
     "goals_against": 36,
-    "goal_difference": -3
+    "games": 29,
+    "goal_diff": -3
   },
   {
     "team_id": 15,
     "points": 33,
-    "matches": 29,
     "wins": 9,
     "draws": 6,
     "losses": 14,
     "goals_for": 29,
     "goals_against": 35,
-    "goal_difference": -6
+    "games": 29,
+    "goal_diff": -6
   },
   {
     "team_id": 11,
     "points": 32,
-    "matches": 29,
     "wins": 9,
     "draws": 5,
     "losses": 15,
     "goals_for": 30,
     "goals_against": 40,
-    "goal_difference": -10
+    "games": 29,
+    "goal_diff": -10
   },
   {
     "team_id": 18,
     "points": 30,
-    "matches": 29,
     "wins": 7,
     "draws": 9,
     "losses": 13,
     "goals_for": 19,
     "goals_against": 31,
-    "goal_difference": -12
+    "games": 29,
+    "goal_diff": -12
   },
   {
     "team_id": 19,
     "points": 29,
-    "matches": 29,
     "wins": 7,
     "draws": 8,
     "losses": 14,
     "goals_for": 25,
     "goals_against": 44,
-    "goal_difference": -19
+    "games": 29,
+    "goal_diff": -19
   },
   {
     "team_id": 20,
     "points": 27,
-    "matches": 29,
     "wins": 6,
     "draws": 9,
     "losses": 14,
     "goals_for": 29,
     "goals_against": 44,
-    "goal_difference": -15
+    "games": 29,
+    "goal_diff": -15
   },
   {
     "team_id": 16,
     "points": 25,
-    "matches": 29,
     "wins": 5,
     "draws": 10,
     "losses": 14,
     "goals_for": 25,
     "goals_against": 35,
-    "goal_difference": -10
+    "games": 29,
+    "goal_diff": -10
   }
 ]
