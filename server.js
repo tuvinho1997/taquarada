@@ -865,7 +865,7 @@ function handleRanking(req, res, user) {
         
         let row = `
           <tr>
-            <td><strong>Jogo ${index + 1}</strong><br><small>${homeTeam.name} x ${awayTeam.name}</small></td>
+            <td><strong>Jogo ${index + 1}</strong><br><span class="team-names">${homeTeam.name} x ${awayTeam.name}</span></td>
             <td><strong>${match.home_score} x ${match.away_score}</strong></td>
         `;
         
@@ -1091,7 +1091,7 @@ function handleRanking(req, res, user) {
             const homeTeam = data.teams.find(t => t.id === match.home_team_id);
             const awayTeam = data.teams.find(t => t.id === match.away_team_id);
             
-            let row = `<tr><td><strong>Jogo ${index + 1}</strong><br><small>${homeTeam.name} x ${awayTeam.name}</small></td>`;
+            let row = `<tr><td><strong>Jogo ${index + 1}</strong><br><span class="team-names">${homeTeam.name} x ${awayTeam.name}</span></td>`;
             row += `<td><strong>${match.home_score} x ${match.away_score}</strong></td>`;
             
             presenters.forEach(p => {
@@ -1301,7 +1301,7 @@ function handleRanking(req, res, user) {
             const homeTeam = data.teams.find(t => t.id === match.home_team_id);
             const awayTeam = data.teams.find(t => t.id === match.away_team_id);
             
-            let row = `<tr><td><strong>Jogo ${index + 1}</strong><br><small>${homeTeam.name} x ${awayTeam.name}</small></td>`;
+            let row = `<tr><td><strong>Jogo ${index + 1}</strong><br><span class="team-names">${homeTeam.name} x ${awayTeam.name}</span></td>`;
             row += `<td><strong>${match.home_score} x ${match.away_score}</strong></td>`;
             
             presenters.forEach(p => {
