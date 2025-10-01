@@ -523,3 +523,93 @@ footer {
   font-weight: bold;
   font-size: 0.9em;
 }
+
+/* Estilos para tabela resumo da última rodada */
+.summary-table-container {
+  margin-top: 2rem;
+  background: var(--cinza-escuro);
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 1px solid var(--cinza-claro);
+}
+
+.summary-table-container h3 {
+  color: var(--amarelo-criciuma);
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.summary-table th {
+  background: linear-gradient(135deg, var(--amarelo-criciuma) 0%, #FFA500 100%);
+  color: var(--preto-criciuma);
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.summary-table td {
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+  color: var(--preto-criciuma);
+  font-size: 0.85rem;
+}
+
+.summary-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.summary-table .total-row {
+  background-color: var(--amarelo-criciuma);
+  font-weight: bold;
+  color: var(--preto-criciuma);
+}
+
+.summary-table .total-row td {
+  border-bottom: none;
+  padding: 15px 8px;
+}
+
+.summary-table .points-exact {
+  color: var(--verde-sucesso);
+  font-weight: bold;
+}
+
+.summary-table .points-result {
+  color: #f39c12;
+  font-weight: bold;
+}
+
+.summary-table .points-wrong {
+  color: var(--vermelho-perigo);
+  font-weight: bold;
+}
+
+/* Responsividade para tabela resumo */
+@media (max-width: 768px) {
+  .summary-table-container {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+  
+  .summary-table {
+    min-width: 600px;
+  }
+  
+  .summary-table th,
+  .summary-table td {
+    padding: 8px 4px;
+    font-size: 0.8rem;
+  }
+}
