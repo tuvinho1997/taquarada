@@ -770,68 +770,11 @@ function handlePalpitesPost(req, res, user) {
   });
 }
 
-// Função para encontrar a última rodada com pontuação
-function getLastRoundWithPoints(matches, predictions) {
-  // Encontrar todas as rodadas que têm partidas finalizadas
-  const roundsWithResults = new Set();
-  
-  matches.forEach(match => {
-    if (match.home_score !== null && match.away_score !== null) {
-      roundsWithResults.add(match.round);
-    }
-  });
-  
-  // Encontrar a rodada mais recente
-  const sortedRounds = Array.from(roundsWithResults).sort((a, b) => b - a);
-  return sortedRounds.length > 0 ? sortedRounds[0] : null;
-}
 
-// Função para calcular pontos de um palpite
-function calculatePredictionPoints(prediction, match) {
-  if (match.home_score === null || match.away_score === null) {
-    return { points: 0, status: 'pending' };
-  }
-  
-  const predHome = prediction.home_score;
-  const predAway = prediction.away_score;
-  const realHome = match.home_score;
-  const realAway = match.away_score;
-  
-  // Resultado exato: 3 pontos
-  if (predHome === realHome && predAway === realAway) {
-    return { points: 3, status: 'exact' };
-  }
-  
-  // Resultado correto (vencedor/empate): 1 ponto
-  const predSign = predHome > predAway ? 'home' : predHome < predAway ? 'away' : 'draw';
-  const realSign = realHome > realAway ? 'home' : realHome < realAway ? 'away' : 'draw';
-  
-  if (predSign === realSign) {
-    return { points: 1, status: 'result' };
-  }
-  
-  // Erro: 0 pontos
-  return { points: 0, status: 'wrong' };
-}
-
-// Nova função para lidar com detalhes do apresentador
-function handlePresenterDetail(req, res, user) {
+function handleRanking(req, res, user) {
   const data = loadData();
   const parsedUrl = url.parse(req.url, true);
-  const presenterId = parseInt(parsedUrl.query.id, 10);
-  
-  if (!presenterId) {
-    res.statusCode = 400;
-    res.end('ID do apresentador não fornecido');
-    return;
-  }
-  
-  const presenter = data.users.find(u => u.id === presenterId && !u.isAdmin);
-  if (!presenter) {
-    res.statusCode = 404;
-    res.end('Apresentador não encontrado');
-    return;
-  }
+  const selectedRound = parsedUrl.query.round ? parseInt(parsedUrl.query.round, 10) : null;
   
   // Buscar palpites do banco
   dbAccess.getPredictions()
@@ -1051,11 +994,15 @@ function handleRanking(req, res, user) {
       ranking.forEach((entry, idx) => {
         const u = entry.user;
         const place = idx + 1;
+        // Mostrar apenas a última rodada com pontuação
+        const lastRound = entry.details.length > 0 ? Math.max(...entry.details.map(d => d.round)) : 0;
+        const lastRoundDetails = entry.details.filter(d => d.round === lastRound);
+        
         let detailsRows = '';
-        entry.details.forEach(d => {
-          detailsRows += `<tr><td>${d.round}</td><td>${d.confrontation}</td><td>${d.prediction}</td><td>${d.result}</td><td>${d.points}</td></tr>`;
+        lastRoundDetails.forEach(d => {
+          detailsRows += `<tr><td>${d.confrontation}</td><td>${d.prediction}</td><td>${d.result}</td><td>${d.points}</td></tr>`;
         });
-        const detailsTable = `<table><thead><tr><th>Rodada</th><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
+        const detailsTable = `<table><thead><tr><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
         
         // Calcular pontuação da última rodada para ranking geral
         let lastRoundPoints = '';
@@ -1067,12 +1014,7 @@ function handleRanking(req, res, user) {
           lastRoundPoints = ` <span class="last-round-points">(+${lastRoundTotal})</span>`;
         }
         
-        // Criar link clicável para o nome do apresentador apenas no ranking geral
-        const presenterName = !selectedRound ? 
-          `<a href="/presenter-detail?id=${u.id}" class="presenter-link">${u.name}</a>` : 
-          u.name;
-        
-        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${place}º ${presenterName}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
+        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${place}º ${u.name}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
       // ============================================
       // Construção dos dados para o gráfico de evolução
@@ -1118,10 +1060,88 @@ function handleRanking(req, res, user) {
       });
       const chartDataObj = { rounds: allRoundsForChart, series: series };
       const chartDataStr = JSON.stringify(chartDataObj);
+      
+      // Gerar tabela resumo da última rodada apenas no ranking geral
+      let summaryTableHtml = '';
+      if (!selectedRound) {
+        // Encontrar a última rodada com resultados
+        const lastRound = Math.max(...ranking.map(entry => 
+          entry.details.length > 0 ? Math.max(...entry.details.map(d => d.round)) : 0
+        ));
+        
+        // Obter partidas da última rodada
+        const lastRoundMatches = data.matches
+          .filter(m => m.round === lastRound && !excludedMatchIds.has(m.id))
+          .sort((a, b) => a.id - b.id);
+        
+        if (lastRoundMatches.length > 0) {
+          // Cabeçalho da tabela
+          let tableHeader = '<tr><th>Jogo</th><th>Resultado</th>';
+          presenters.forEach(p => {
+            tableHeader += `<th>${p.name}</th>`;
+          });
+          tableHeader += '</tr>';
+          
+          // Linhas da tabela
+          let tableRows = '';
+          let presenterTotals = {};
+          presenters.forEach(p => { presenterTotals[p.id] = 0; });
+          
+          lastRoundMatches.forEach((match, index) => {
+            const homeTeam = data.teams.find(t => t.id === match.home_team_id);
+            const awayTeam = data.teams.find(t => t.id === match.away_team_id);
+            
+            let row = `<tr><td><strong>Jogo ${index + 1}</strong><br><small>${homeTeam.name} x ${awayTeam.name}</small></td>`;
+            row += `<td><strong>${match.home_score} x ${match.away_score}</strong></td>`;
+            
+            presenters.forEach(p => {
+              const pred = predsFromDB.find(pr => pr.match_id === match.id && pr.user_id === p.id);
+              if (pred) {
+                const predSign = resultSign(pred.home_score, pred.away_score);
+                const realSign = resultSign(match.home_score, match.away_score);
+                let points = 0;
+                if (pred.home_score === match.home_score && pred.away_score === match.away_score) {
+                  points = 3;
+                } else if (predSign === realSign) {
+                  points = 1;
+                }
+                presenterTotals[p.id] += points;
+                
+                const statusClass = points === 3 ? 'points-exact' : points === 1 ? 'points-result' : 'points-wrong';
+                row += `<td><strong>${pred.home_score}x${pred.away_score}</strong><br><span class="${statusClass}">${points} pts</span></td>`;
+              } else {
+                row += '<td>-</td>';
+              }
+            });
+            
+            row += '</tr>';
+            tableRows += row;
+          });
+          
+          // Linha de totais
+          let totalRow = '<tr class="total-row"><td colspan="2"><strong>TOTAL DE PONTOS</strong></td>';
+          presenters.forEach(p => {
+            totalRow += `<td><strong>${presenterTotals[p.id]} pontos</strong></td>`;
+          });
+          totalRow += '</tr>';
+          
+          summaryTableHtml = `
+            <div class="summary-table-container">
+              <h3>📊 Resumo da Rodada ${lastRound}</h3>
+              <table class="summary-table">
+                <thead>${tableHeader}</thead>
+                <tbody>${tableRows}${totalRow}</tbody>
+              </table>
+            </div>
+          `;
+        }
+      }
+      
       const nav = buildNavLinks(user);
       const html = renderTemplate('ranking.html', {
         ranking_cards: cardsHtml,
         round_selector: selectorHtml,
+        summary_table: summaryTableHtml,
         admin_link: nav.adminLink,
         auth_link: nav.authLink,
         chart_data: chartDataStr
@@ -1190,11 +1210,15 @@ function handleRanking(req, res, user) {
       ranking.forEach((entry, idx) => {
         const u = entry.user;
         const place = idx + 1;
+        // Mostrar apenas a última rodada com pontuação
+        const lastRound = entry.details.length > 0 ? Math.max(...entry.details.map(d => d.round)) : 0;
+        const lastRoundDetails = entry.details.filter(d => d.round === lastRound);
+        
         let detailsRows = '';
-        entry.details.forEach(d => {
-          detailsRows += `<tr><td>${d.round}</td><td>${d.confrontation}</td><td>${d.prediction}</td><td>${d.result}</td><td>${d.points}</td></tr>`;
+        lastRoundDetails.forEach(d => {
+          detailsRows += `<tr><td>${d.confrontation}</td><td>${d.prediction}</td><td>${d.result}</td><td>${d.points}</td></tr>`;
         });
-        const detailsTable = `<table><thead><tr><th>Rodada</th><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
+        const detailsTable = `<table><thead><tr><th>Confronto</th><th>Palpite</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>${detailsRows}</tbody></table>`;
         
         // Calcular pontuação da última rodada para ranking geral (fallback)
         let lastRoundPoints = '';
@@ -1206,12 +1230,7 @@ function handleRanking(req, res, user) {
           lastRoundPoints = ` <span class="last-round-points">(+${lastRoundTotal})</span>`;
         }
         
-        // Criar link clicável para o nome do apresentador apenas no ranking geral (fallback)
-        const presenterName = !selectedRound ? 
-          `<a href="/presenter-detail?id=${u.id}" class="presenter-link">${u.name}</a>` : 
-          u.name;
-        
-        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${idx + 1}º ${presenterName}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
+        cardsHtml += `<div class="ranking-card"><div class="card-header" onclick="toggleCard(${u.id})"><span>${idx + 1}º ${u.name}${lastRoundPoints} - ${entry.total} pts</span><span>Exatos: ${entry.exactCount} | Resultados: ${entry.resultCount} | Erros: ${entry.errorCount}</span></div><div id="card-body-${u.id}" class="card-body">${detailsTable}</div></div>`;
       });
       // ============================================
       // Construção dos dados para o gráfico na via de fallback
@@ -1251,10 +1270,88 @@ function handleRanking(req, res, user) {
       });
       const chartDataObj = { rounds: allRoundsForChart, series: series };
       const chartDataStr = JSON.stringify(chartDataObj);
+      
+      // Gerar tabela resumo da última rodada apenas no ranking geral
+      let summaryTableHtml = '';
+      if (!selectedRound) {
+        // Encontrar a última rodada com resultados
+        const lastRound = Math.max(...ranking.map(entry => 
+          entry.details.length > 0 ? Math.max(...entry.details.map(d => d.round)) : 0
+        ));
+        
+        // Obter partidas da última rodada
+        const lastRoundMatches = data.matches
+          .filter(m => m.round === lastRound && !excludedMatchIds.has(m.id))
+          .sort((a, b) => a.id - b.id);
+        
+        if (lastRoundMatches.length > 0) {
+          // Cabeçalho da tabela
+          let tableHeader = '<tr><th>Jogo</th><th>Resultado</th>';
+          presenters.forEach(p => {
+            tableHeader += `<th>${p.name}</th>`;
+          });
+          tableHeader += '</tr>';
+          
+          // Linhas da tabela
+          let tableRows = '';
+          let presenterTotals = {};
+          presenters.forEach(p => { presenterTotals[p.id] = 0; });
+          
+          lastRoundMatches.forEach((match, index) => {
+            const homeTeam = data.teams.find(t => t.id === match.home_team_id);
+            const awayTeam = data.teams.find(t => t.id === match.away_team_id);
+            
+            let row = `<tr><td><strong>Jogo ${index + 1}</strong><br><small>${homeTeam.name} x ${awayTeam.name}</small></td>`;
+            row += `<td><strong>${match.home_score} x ${match.away_score}</strong></td>`;
+            
+            presenters.forEach(p => {
+              const pred = predsFromDB.find(pr => pr.match_id === match.id && pr.user_id === p.id);
+              if (pred) {
+                const predSign = resultSign(pred.home_score, pred.away_score);
+                const realSign = resultSign(match.home_score, match.away_score);
+                let points = 0;
+                if (pred.home_score === match.home_score && pred.away_score === match.away_score) {
+                  points = 3;
+                } else if (predSign === realSign) {
+                  points = 1;
+                }
+                presenterTotals[p.id] += points;
+                
+                const statusClass = points === 3 ? 'points-exact' : points === 1 ? 'points-result' : 'points-wrong';
+                row += `<td><strong>${pred.home_score}x${pred.away_score}</strong><br><span class="${statusClass}">${points} pts</span></td>`;
+              } else {
+                row += '<td>-</td>';
+              }
+            });
+            
+            row += '</tr>';
+            tableRows += row;
+          });
+          
+          // Linha de totais
+          let totalRow = '<tr class="total-row"><td colspan="2"><strong>TOTAL DE PONTOS</strong></td>';
+          presenters.forEach(p => {
+            totalRow += `<td><strong>${presenterTotals[p.id]} pontos</strong></td>`;
+          });
+          totalRow += '</tr>';
+          
+          summaryTableHtml = `
+            <div class="summary-table-container">
+              <h3>📊 Resumo da Rodada ${lastRound}</h3>
+              <table class="summary-table">
+                <thead>${tableHeader}</thead>
+                <tbody>${tableRows}${totalRow}</tbody>
+              </table>
+            </div>
+          `;
+        }
+      }
+      
       const nav = buildNavLinks(user);
       const html = renderTemplate('ranking.html', {
         ranking_cards: cardsHtml,
         round_selector: selectorHtml,
+        summary_table: summaryTableHtml,
         admin_link: nav.adminLink,
         auth_link: nav.authLink,
         chart_data: chartDataStr
@@ -1667,10 +1764,7 @@ const server = http.createServer((req, res) => {
     handleRanking(req, res, user);
     return;
   }
-  if (pathname === '/presenter-detail' && method === 'GET') {
-    handlePresenterDetail(req, res, user);
-    return;
-  }
+
   if (pathname === '/resultados' && method === 'GET') {
     handleResultados(req, res, user);
     return;
