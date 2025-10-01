@@ -498,3 +498,28 @@ footer {
   font-weight: bold;
 }
 
+
+/* Estilos para links dos apresentadores no ranking */
+.presenter-link {
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.presenter-link:hover {
+  color: var(--amarelo-criciuma);
+  border-bottom-color: var(--amarelo-criciuma);
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+.presenter-link:active {
+  transform: translateY(1px);
+}
+
+/* Melhorar visual dos pontos da última rodada */
+.last-round-points {
+  color: var(--amarelo-criciuma);
+  font-weight: bold;
+  font-size: 0.9em;
+}
