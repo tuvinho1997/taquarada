@@ -1538,6 +1538,115 @@ function handleResultados(req, res, user) {
     });
 }
 
+/**
+ * Página de simulação das últimas 6 rodadas. Esta rota exibe um formulário
+ * com todas as partidas restantes do campeonato (rodadas 33 a 38) e permite
+ * que o usuário preencha placares hipotéticos. A partir desses placares,
+ * é possível calcular uma classificação final projetada sem alterar os
+ * dados oficiais armazenados. A classificação base utilizada é lida a
+ * partir do arquivo `classification.json` e é combinada com os resultados
+ * fornecidos pelo usuário em tempo de execução via JavaScript no cliente.
+ *
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ * @param {Object|null} user
+ */
+function handleSimulacao(req, res, user) {
+  const data = loadData();
+  // Construir navegação condicional para admin/login
+  const nav = buildNavLinks(user);
+  // Classificação base (até a última rodada disputada) – usamos cópia
+  const baseClassification = data.classification.slice();
+  // Definição das partidas das rodadas 33 a 38. Cada entrada contém a
+  // rodada, a equipe mandante (home) e a visitante (away) identificadas
+  // pelo ID conforme o cadastro em teams.json. A ordem dos confrontos é
+  // relevante apenas para indexar os inputs gerados no front-end.
+  const schedule = [
+    // Rodada 33
+    { round: 33, home: 20, away: 3 },  // Amazonas x Novorizontino
+    { round: 33, home: 14, away: 6 },  // Atlético-GO x Vila Nova
+    { round: 33, home: 15, away: 13 }, // América-MG x CRB
+    { round: 33, home: 7,  away: 11 }, // Remo x Athletic Club
+    { round: 33, home: 8,  away: 10 }, // Avaí x Criciúma
+    { round: 33, home: 12, away: 18 }, // Operário x Volta Redonda
+    { round: 33, home: 19, away: 5 },  // Botafogo-SP x Cuiabá
+    { round: 33, home: 2,  away: 9 },  // Coritiba x Athletico-PR
+    { round: 33, home: 1,  away: 4 },  // Goiás x Chapecoense
+    { round: 33, home: 17, away: 16 }, // Ferroviária x Paysandu
+    // Rodada 34
+    { round: 34, home: 3,  away: 19 }, // Novorizontino x Botafogo-SP
+    { round: 34, home: 5,  away: 7 },  // Cuiabá x Remo
+    { round: 34, home: 11, away: 15 }, // Athletic Club x América-MG
+    { round: 34, home: 18, away: 2 },  // Volta Redonda x Coritiba
+    { round: 34, home: 16, away: 8 },  // Paysandu x Avaí
+    { round: 34, home: 10, away: 1 },  // Criciúma x Goiás
+    { round: 34, home: 13, away: 14 }, // CRB x Atlético-GO
+    { round: 34, home: 6,  away: 17 }, // Vila Nova x Ferroviária
+    { round: 34, home: 4,  away: 12 }, // Chapecoense x Operário
+    { round: 34, home: 9,  away: 20 }, // Athletico-PR x Amazonas
+    // Rodada 35
+    { round: 35, home: 14, away: 16 }, // Atlético-GO x Paysandu
+    { round: 35, home: 2,  away: 13 }, // Coritiba x CRB
+    { round: 35, home: 17, away: 10 }, // Ferroviária x Criciúma
+    { round: 35, home: 1,  away: 9 },  // Goiás x Athletico-PR
+    { round: 35, home: 8,  away: 11 }, // Avaí x Athletic Club
+    { round: 35, home: 20, away: 5 },  // Amazonas x Cuiabá
+    { round: 35, home: 7,  away: 4 },  // Remo x Chapecoense
+    { round: 35, home: 12, away: 6 },  // Operário x Vila Nova
+    { round: 35, home: 15, away: 3 },  // América-MG x Novorizontino
+    { round: 35, home: 18, away: 19 }, // Volta Redonda x Botafogo-SP
+    // Rodada 36
+    { round: 36, home: 11, away: 17 }, // Athletic Club x Ferroviária
+    { round: 36, home: 5,  away: 1 },  // Cuiabá x Goiás
+    { round: 36, home: 3,  away: 7 },  // Novorizontino x Remo
+    { round: 36, home: 9,  away: 18 }, // Athletico-PR x Volta Redonda
+    { round: 36, home: 6,  away: 8 },  // Vila Nova x Avaí
+    { round: 36, home: 10, away: 14 }, // Criciúma x Atlético-GO
+    { round: 36, home: 13, away: 12 }, // CRB x Operário
+    { round: 36, home: 16, away: 2 },  // Paysandu x Coritiba
+    { round: 36, home: 4,  away: 15 }, // Chapecoense x América-MG
+    { round: 36, home: 19, away: 20 }, // Botafogo-SP x Amazonas
+    // Rodada 37
+    { round: 37, home: 15, away: 5 },  // América-MG x Cuiabá
+    { round: 37, home: 14, away: 12 }, // Atlético-GO x Operário
+    { round: 37, home: 8,  away: 7 },  // Avaí x Remo
+    { round: 37, home: 2,  away: 11 }, // Coritiba x Athletic Club
+    { round: 37, home: 13, away: 6 },  // CRB x Vila Nova
+    { round: 37, home: 10, away: 19 }, // Criciúma x Botafogo-SP
+    { round: 37, home: 17, away: 9 },  // Ferroviária x Athletico-PR
+    { round: 37, home: 1,  away: 3 },  // Goiás x Novorizontino
+    { round: 37, home: 16, away: 20 }, // Paysandu x Amazonas
+    { round: 37, home: 18, away: 4 },  // Volta Redonda x Chapecoense
+    // Rodada 38
+    { round: 38, home: 20, away: 2 },  // Amazonas x Coritiba
+    { round: 38, home: 11, away: 16 }, // Athletic Club x Paysandu
+    { round: 38, home: 9,  away: 15 }, // Athletico-PR x América-MG
+    { round: 38, home: 19, away: 8 },  // Botafogo-SP x Avaí
+    { round: 38, home: 4,  away: 14 }, // Chapecoense x Atlético-GO
+    { round: 38, home: 5,  away: 10 }, // Cuiabá x Criciúma
+    { round: 38, home: 3,  away: 13 }, // Novorizontino x CRB
+    { round: 38, home: 12, away: 17 }, // Operário x Ferroviária
+    { round: 38, home: 7,  away: 1 },  // Remo x Goiás
+    { round: 38, home: 6,  away: 18 }  // Vila Nova x Volta Redonda
+  ];
+  // Serializa dados para injeção no front-end. Utilizamos JSON.stringify
+  // para gerar strings válidas de JavaScript. Não removemos espaços ou
+  // quebras de linha para melhor legibilidade.
+  const scheduleJS = JSON.stringify(schedule);
+  const classificationJS = JSON.stringify(baseClassification);
+  const teamsJS = JSON.stringify(data.teams);
+  const html = renderTemplate('simulacao.html', {
+    schedule_js: scheduleJS,
+    classification_js: classificationJS,
+    teams_js: teamsJS,
+    admin_link: nav.adminLink,
+    auth_link: nav.authLink
+  });
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.end(html);
+}
+
 function handleArtilharia(req, res, user) {
   const data = loadData();
   // Sort scorers by goals desc
@@ -1771,6 +1880,13 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/artilharia' && method === 'GET') {
     handleArtilharia(req, res, user);
+    return;
+  }
+
+  // Rota de simulação das últimas 6 rodadas
+  if (pathname === '/simulacao' && method === 'GET') {
+    // Qualquer usuário (logado ou não) pode acessar a simulação
+    handleSimulacao(req, res, user);
     return;
   }
   if (pathname === '/admin') {
