@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulação - Debate Taquara Raiz</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Estilos adicionais para a página de simulação */
+    .sim-input {
+      width: 50px;
+      padding: 0.3rem;
+      border: 1px solid var(--cinza-claro);
+      border-radius: 4px;
+      background-color: var(--cinza-escuro);
+      color: #ffffff;
+      text-align: center;
+    }
+    .sim-section {
+      margin-bottom: 2rem;
+    }
+    .sim-section h3 {
+      margin: 1rem 0;
+      text-align: left;
+      color: var(--amarelo-criciuma);
+    }
+    .sim-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+      background-color: var(--cinza-escuro);
+    }
+    .sim-table th,
+    .sim-table td {
+      padding: 0.6rem;
+      border-bottom: 1px solid var(--cinza-claro);
+      text-align: center;
+    }
+    .sim-table th {
+      background-color: var(--preto-criciuma);
+      color: var(--amarelo-criciuma);
+    }
+    .sim-btn {
+      padding: 0.8rem 1.5rem;
+      background-color: var(--amarelo-criciuma);
+      color: var(--preto-criciuma);
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      display: block;
+      margin: 0 auto;
+    }
+    .sim-btn:hover {
+      background-color: #e0c000;
+    }
+    #result-container {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/static/taquarada_logo.png" alt="Portal Taquarada">
+      <img src="/static/boneco.png" alt="Boneco Taquarada">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="/">Classificação</a></li>
+        <li><a href="/palpites">Palpites</a></li>
+        <li><a href="/ranking">Ranking</a></li>
+        <li><a href="/resultados">Resultados</a></li>
+        <li><a href="/artilharia">Artilharia</a></li>
+        <li><a href="/simulacao" class="active">Simulação</a></li>
+        {{admin_link}}
+        {{auth_link}}
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h2>Simulação das Últimas 6 Rodadas</h2>
+    <p style="text-align:center; margin-bottom:1.5rem;">Insira seus palpites para cada partida das rodadas 33 a 38 e clique em <strong>Simular</strong> para ver a classificação final projetada.</p>
+    <div id="sim-container"></div>
+    <button id="sim-button" class="sim-btn">Simular</button>
+    <div id="result-container"></div>
+  </main>
+  <footer>
+    <p>&copy; 2025 Debate Taquara Raiz</p>
+  </footer>
+  <script>
+  // Dados injetados pelo servidor
+  const schedule = {{schedule_js}};
+  const classificationBase = {{classification_js}};
+  const teams = {{teams_js}};
+
+  // Constrói um mapa de equipes para acesso rápido por id
+  const teamMap = {};
+  for (const t of teams) {
+    teamMap[t.id] = t;
+  }
+
+  // Gera a tabela de partidas agrupada por rodada
+  function buildSchedule() {
+    const container = document.getElementById('sim-container');
+    const rounds = {};
+    schedule.forEach((m, idx) => {
+      if (!rounds[m.round]) rounds[m.round] = [];
+      // armazenamos também o índice global para recuperar valores após
+      rounds[m.round].push({ ...m, index: idx });
+    });
+    const roundNumbers = Object.keys(rounds).sort((a, b) => parseInt(a) - parseInt(b));
+    roundNumbers.forEach(round => {
+      const section = document.createElement('div');
+      section.className = 'sim-section';
+      const h3 = document.createElement('h3');
+      h3.textContent = 'Rodada ' + round;
+      section.appendChild(h3);
+      const table = document.createElement('table');
+      table.className = 'sim-table';
+      const thead = document.createElement('thead');
+      thead.innerHTML = '<tr><th>Confronto</th><th>Gols Casa</th><th>Gols Fora</th></tr>';
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      rounds[round].forEach(match => {
+        const tr = document.createElement('tr');
+        const home = teamMap[match.home];
+        const away = teamMap[match.away];
+        tr.innerHTML = '<td>' + home.name + ' x ' + away.name + '</td>' +
+          '<td><input type="number" min="0" id="home_' + match.index + '" class="sim-input" data-home="' + match.home + '" data-away="' + match.away + '" data-index="' + match.index + '"></td>' +
+          '<td><input type="number" min="0" id="away_' + match.index + '" class="sim-input" data-home="' + match.home + '" data-away="' + match.away + '" data-index="' + match.index + '"></td>';
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      section.appendChild(table);
+      container.appendChild(section);
+    });
+  }
+
+  // Faz uma cópia profunda da classificação base
+  function deepCopyClassification(base) {
+    return base.map(item => ({ ...item }));
+  }
+
+  // Aplica estatísticas de uma partida à classificação de um time
+  function applyMatchStats(entry, gf, ga) {
+    entry.games += 1;
+    entry.goals_for += gf;
+    entry.goals_against += ga;
+    if (gf > ga) {
+      entry.wins += 1;
+      entry.points += 3;
+    } else if (gf < ga) {
+      entry.losses += 1;
+    } else {
+      entry.draws += 1;
+      entry.points += 1;
+    }
+    entry.goal_diff = entry.goals_for - entry.goals_against;
+  }
+
+  // Executa a simulação e gera a tabela final
+  function simulate() {
+    const newClass = deepCopyClassification(classificationBase);
+    const classMap = {};
+    newClass.forEach(entry => { classMap[entry.team_id] = entry; });
+    schedule.forEach((match, idx) => {
+      const homeInput = document.getElementById('home_' + idx);
+      const awayInput = document.getElementById('away_' + idx);
+      let h = parseInt(homeInput.value);
+      let a = parseInt(awayInput.value);
+      if (isNaN(h)) h = 0;
+      if (isNaN(a)) a = 0;
+      applyMatchStats(classMap[match.home], h, a);
+      applyMatchStats(classMap[match.away], a, h);
+    });
+    const arr = Object.values(classMap);
+    arr.sort(function(a, b) {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      const diffA = a.goals_for - a.goals_against;
+      const diffB = b.goals_for - b.goals_against;
+      if (diffB !== diffA) return diffB - diffA;
+      if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+      const nameA = teamMap[a.team_id].name;
+      const nameB = teamMap[b.team_id].name;
+      return nameA.localeCompare(nameB);
+    });
+    const resultDiv = document.getElementById('result-container');
+    resultDiv.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'classification-table';
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>Pos</th><th>Time</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr>';
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    arr.forEach((entry, idx) => {
+      const team = teamMap[entry.team_id];
+      const tr = document.createElement('tr');
+      // Define classes de zona (promoção, meio, rebaixamento)
+      let zoneClass = '';
+      if (idx < 4) zoneClass = 'zone-promotion';
+      else if (idx >= arr.length - 4) zoneClass = 'zone-relegation';
+      else zoneClass = 'zone-middle';
+      let highlight = '';
+      if (team.highlight) highlight = 'highlight-team';
+      tr.className = zoneClass + ' ' + highlight;
+      const abbrLower = team.abbr.toLowerCase();
+      const logoHtml = '<img src="/static/team_logos/' + abbrLower + '.png" class="team-logo-small" alt="' + team.name + ' logo">';
+      tr.innerHTML = '<td>' + (idx + 1) + '</td>' +
+                     '<td style="display:flex; align-items:center; gap:0.5rem;">' + logoHtml + team.name + '</td>' +
+                     '<td>' + entry.points + '</td>' +
+                     '<td>' + entry.games + '</td>' +
+                     '<td>' + entry.wins + '</td>' +
+                     '<td>' + entry.draws + '</td>' +
+                     '<td>' + entry.losses + '</td>' +
+                     '<td>' + entry.goals_for + '</td>' +
+                     '<td>' + entry.goals_against + '</td>' +
+                     '<td>' + (entry.goals_for - entry.goals_against) + '</td>';
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    resultDiv.appendChild(table);
+  }
+
+  buildSchedule();
+  document.getElementById('sim-button').addEventListener('click', simulate);
+  </script>
+</body>
+</html>
