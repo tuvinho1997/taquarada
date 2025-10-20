@@ -1555,13 +1555,25 @@ function handleSimulacao(req, res, user) {
   const data = loadData();
   // Construir navegação condicional para admin/login
   const nav = buildNavLinks(user);
-  // Classificação base (até a última rodada disputada) – usamos cópia
-  const baseClassification = data.classification.slice();
+  // Classificação base (até a última rodada disputada) – recalculamos
+  // a tabela a partir das partidas já registradas no banco. Isso
+  // garante que eventuais atualizações feitas via admin (por exemplo,
+  // placares adicionados) sejam refletidas na classificação inicial da
+  // simulação. A função computeClassification ignora partidas sem
+  // placar (placar nulo), portanto ela considera apenas confrontos
+  // finalizados.
+  const baseClassification = computeClassification(data.teams, data.matches);
   // Definição das partidas das rodadas 33 a 38. Cada entrada contém a
   // rodada, a equipe mandante (home) e a visitante (away) identificadas
   // pelo ID conforme o cadastro em teams.json. A ordem dos confrontos é
   // relevante apenas para indexar os inputs gerados no front-end.
-  const schedule = [
+  // Definição das partidas das rodadas 33 a 38. Utilizamos essa lista
+  // como base, mas filtraremos partidas que já tiveram placar definido
+  // no banco de dados. Quando um jogo já tem um resultado computado via
+  // admin (home_score e away_score diferentes de null em matches.json),
+  // ele não aparece na simulação, garantindo que o usuário só possa
+  // simular rodadas pendentes.
+  const fullSchedule = [
     // Rodada 33
     { round: 33, home: 20, away: 3 },  // Amazonas x Novorizontino
     { round: 33, home: 14, away: 6 },  // Atlético-GO x Vila Nova
@@ -1629,6 +1641,23 @@ function handleSimulacao(req, res, user) {
     { round: 38, home: 7,  away: 1 },  // Remo x Goiás
     { round: 38, home: 6,  away: 18 }  // Vila Nova x Volta Redonda
   ];
+
+  // Carrega partidas existentes para detectar quais jogos já foram disputados.
+  // Consideramos um jogo disputado quando ambos os placares não são nulos.
+  const existingMatches = data.matches;
+
+  // Filtra a lista completa, removendo confrontos que já têm placares
+  // registrados no banco (matches.json). A correspondência é feita por
+  // rodada, time mandante e visitante. Se houver um match com esses
+  // atributos e scores definidos, o confronto não deve aparecer na
+  // simulação.
+  const schedule = fullSchedule.filter(item => {
+    const found = existingMatches.find(m => {
+      return m.round === item.round && m.home_team_id === item.home && m.away_team_id === item.away;
+    });
+    if (!found) return true; // jogo ainda não cadastrado, então pode ser simulado
+    return found.home_score === null || found.away_score === null;
+  });
   // Serializa dados para injeção no front-end. Utilizamos JSON.stringify
   // para gerar strings válidas de JavaScript. Não removemos espaços ou
   // quebras de linha para melhor legibilidade.
