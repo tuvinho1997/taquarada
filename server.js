@@ -1555,14 +1555,15 @@ function handleSimulacao(req, res, user) {
   const data = loadData();
   // Construir navegação condicional para admin/login
   const nav = buildNavLinks(user);
-  // Classificação base (até a última rodada disputada) – recalculamos
-  // a tabela a partir das partidas já registradas no banco. Isso
-  // garante que eventuais atualizações feitas via admin (por exemplo,
-  // placares adicionados) sejam refletidas na classificação inicial da
-  // simulação. A função computeClassification ignora partidas sem
-  // placar (placar nulo), portanto ela considera apenas confrontos
-  // finalizados.
-  const baseClassification = computeClassification(data.teams, data.matches);
+  // Classificação base (até a última rodada disputada). Utilizamos uma cópia
+  // do arquivo `classification.json` que já reflete a classificação oficial
+  // do campeonato. O arquivo é atualizado via Admin quando resultados
+  // são registrados, portanto ele inclui as partidas finalizadas. Não
+  // recalculamos diretamente a partir de matches.json para evitar
+  // truncar as rodadas anteriores (matches.json pode não conter todas as
+  // rodadas). Ao clonar, preservamos a classificação como base para
+  // adicionar os placares simulados.
+  const baseClassification = data.classification.slice();
   // Definição das partidas das rodadas 33 a 38. Cada entrada contém a
   // rodada, a equipe mandante (home) e a visitante (away) identificadas
   // pelo ID conforme o cadastro em teams.json. A ordem dos confrontos é
