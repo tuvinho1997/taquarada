@@ -358,6 +358,142 @@ function computeClassification(teams, matches) {
   return classification;
 }
 
+// ======================================================================
+// Agendamento das rodadas futuras e inserção automática de partidas
+// ======================================================================
+// A aplicação possui uma aba de "Simulação" com os confrontos das últimas
+// cinco rodadas do campeonato (rodadas 34 a 38). Para tornar o fluxo de
+// administração mais fluido, adicionamos uma lógica que observa quando
+// uma rodada inteira é concluída (todos os placares definidos) e, nesse
+// momento, carrega automaticamente a próxima rodada em `matches.json`.
+// Isso elimina a necessidade de cadastro manual das rodadas finais e
+// permite que os apresentadores façam seus palpites assim que a rodada
+// anterior for encerrada.
+//
+// A lista abaixo descreve os confrontos das rodadas 34 a 38. Cada objeto
+// possui a propriedade `round` indicando a rodada e as propriedades
+// `home` e `away` com os IDs das equipes conforme cadastradas em
+// `teams.json`. Caso queira ajustar a ordem ou incluir rodadas extras,
+// basta editar este array.
+const upcomingRoundsSchedule = [
+  // Rodada 34
+  { round: 34, home: 3,  away: 19 }, // Novorizontino x Botafogo-SP
+  { round: 34, home: 5,  away: 7  }, // Cuiabá x Remo
+  { round: 34, home: 11, away: 15 }, // Athletic Club x América-MG
+  { round: 34, home: 18, away: 2  }, // Volta Redonda x Coritiba
+  { round: 34, home: 16, away: 8  }, // Paysandu x Avaí
+  { round: 34, home: 10, away: 1  }, // Criciúma x Goiás
+  { round: 34, home: 13, away: 14 }, // CRB x Atlético-GO
+  { round: 34, home: 6,  away: 17 }, // Vila Nova x Ferroviária
+  { round: 34, home: 4,  away: 12 }, // Chapecoense x Operário
+  { round: 34, home: 9,  away: 20 }, // Athletico-PR x Amazonas
+  // Rodada 35
+  { round: 35, home: 14, away: 16 }, // Atlético-GO x Paysandu
+  { round: 35, home: 2,  away: 13 }, // Coritiba x CRB
+  { round: 35, home: 17, away: 10 }, // Ferroviária x Criciúma
+  { round: 35, home: 1,  away: 9  }, // Goiás x Athletico-PR
+  { round: 35, home: 8,  away: 11 }, // Avaí x Athletic Club
+  { round: 35, home: 20, away: 5  }, // Amazonas x Cuiabá
+  { round: 35, home: 7,  away: 4  }, // Remo x Chapecoense
+  { round: 35, home: 12, away: 6  }, // Operário x Vila Nova
+  { round: 35, home: 15, away: 3  }, // América-MG x Novorizontino
+  { round: 35, home: 18, away: 19 }, // Volta Redonda x Botafogo-SP
+  // Rodada 36
+  { round: 36, home: 11, away: 17 }, // Athletic Club x Ferroviária
+  { round: 36, home: 5,  away: 1  }, // Cuiabá x Goiás
+  { round: 36, home: 3,  away: 7  }, // Novorizontino x Remo
+  { round: 36, home: 9,  away: 18 }, // Athletico-PR x Volta Redonda
+  { round: 36, home: 6,  away: 8  }, // Vila Nova x Avaí
+  { round: 36, home: 10, away: 14 }, // Criciúma x Atlético-GO
+  { round: 36, home: 13, away: 12 }, // CRB x Operário
+  { round: 36, home: 16, away: 2  }, // Paysandu x Coritiba
+  { round: 36, home: 4,  away: 15 }, // Chapecoense x América-MG
+  { round: 36, home: 19, away: 20 }, // Botafogo-SP x Amazonas
+  // Rodada 37
+  { round: 37, home: 15, away: 5  }, // América-MG x Cuiabá
+  { round: 37, home: 14, away: 12 }, // Atlético-GO x Operário
+  { round: 37, home: 8,  away: 7  }, // Avaí x Remo
+  { round: 37, home: 2,  away: 11 }, // Coritiba x Athletic Club
+  { round: 37, home: 13, away: 6  }, // CRB x Vila Nova
+  { round: 37, home: 10, away: 19 }, // Criciúma x Botafogo-SP
+  { round: 37, home: 17, away: 9  }, // Ferroviária x Athletico-PR
+  { round: 37, home: 1,  away: 3  }, // Goiás x Novorizontino
+  { round: 37, home: 16, away: 20 }, // Paysandu x Amazonas
+  { round: 37, home: 18, away: 4  }, // Volta Redonda x Chapecoense
+  // Rodada 38
+  { round: 38, home: 20, away: 2  }, // Amazonas x Coritiba
+  { round: 38, home: 11, away: 16 }, // Athletic Club x Paysandu
+  { round: 38, home: 9,  away: 15 }, // Athletico-PR x América-MG
+  { round: 38, home: 19, away: 8  }, // Botafogo-SP x Avaí
+  { round: 38, home: 4,  away: 14 }, // Chapecoense x Atlético-GO
+  { round: 38, home: 5,  away: 10 }, // Cuiabá x Criciúma
+  { round: 38, home: 3,  away: 13 }, // Novorizontino x CRB
+  { round: 38, home: 12, away: 17 }, // Operário x Ferroviária
+  { round: 38, home: 7,  away: 1  }, // Remo x Goiás
+  { round: 38, home: 6,  away: 18 }  // Vila Nova x Volta Redonda
+];
+
+/**
+ * Insere automaticamente a próxima rodada nas partidas caso a rodada atual
+ * esteja finalizada. A rodada atual é considerada finalizada quando
+ * todos os confrontos daquela rodada têm placares definidos (diferentes
+ * de null). A função usa o array `upcomingRoundsSchedule` para buscar
+ * os confrontos do próximo número de rodada. Se não houver confrontos
+ * programados ou se a próxima rodada já existir em `matches.json`, nada
+ * é feito. Ao inserir novas partidas, elas recebem um ID sequencial
+ * contínuo e uma data opcional derivada da maior data da rodada atual
+ * incrementada em sete dias. Caso a data não possa ser calculada, é
+ * deixada como string vazia.
+ *
+ * @param {Object} dataStore - Objeto contendo os dados carregados (inclui matches)
+ * @returns {boolean} true se uma nova rodada foi adicionada, false caso contrário
+ */
+function maybeInsertNextRound(dataStore) {
+  const rounds = dataStore.matches.map(m => m.round);
+  if (rounds.length === 0) return false;
+  const maxRound = Math.max(...rounds);
+  const nextRound = maxRound + 1;
+  // Se já existem partidas para a próxima rodada, não adiciona
+  if (dataStore.matches.some(m => m.round === nextRound)) {
+    return false;
+  }
+  // Garante que todas as partidas da rodada atual estejam finalizadas
+  const currentRoundMatches = dataStore.matches.filter(m => m.round === maxRound);
+  if (currentRoundMatches.length === 0) return false;
+  const finished = currentRoundMatches.every(m => m.home_score !== null && m.away_score !== null);
+  if (!finished) return false;
+  // Confrontos programados para a próxima rodada
+  const toInsert = upcomingRoundsSchedule.filter(item => item.round === nextRound);
+  if (toInsert.length === 0) return false;
+  // Calcula data padrão baseada na última data da rodada atual
+  let nextDate = '';
+  try {
+    const dates = currentRoundMatches.map(m => m.date).filter(Boolean);
+    if (dates.length > 0) {
+      const latest = new Date(Math.max(...dates.map(d => new Date(d).getTime())));
+      const scheduled = new Date(latest.getTime() + 7 * 24 * 60 * 60 * 1000);
+      nextDate = scheduled.toISOString().slice(0, 10);
+    }
+  } catch (e) {
+    nextDate = '';
+  }
+  // Define o próximo id sequencial
+  let nextId = dataStore.matches.reduce((max, m) => m.id > max ? m.id : max, 0);
+  toInsert.forEach(item => {
+    nextId += 1;
+    dataStore.matches.push({
+      id: nextId,
+      round: item.round,
+      date: nextDate,
+      home_team_id: item.home,
+      away_team_id: item.away,
+      home_score: null,
+      away_score: null
+    });
+  });
+  writeJSON('matches.json', dataStore.matches);
+  return true;
+}
 // Determine result sign: returns 'home', 'draw', 'away'
 function resultSign(home, away) {
   if (home > away) return 'home';
@@ -1793,6 +1929,15 @@ function handleAdminUpdateMatches(req, res, user) {
       return 0;
     });
     writeJSON('classification.json', updatedClassification);
+    // Após atualizar a classificação, verifique se a rodada atual foi concluída.
+    // Caso afirmativo, insere automaticamente a próxima rodada (rodadas 34+),
+    // conforme definido no array `upcomingRoundsSchedule`. Isso permite que
+    // novos confrontos apareçam em Palpites e Ranking sem intervenção manual.
+    try {
+      maybeInsertNextRound(dataStore);
+    } catch (e) {
+      console.error('Erro ao tentar inserir próxima rodada:', e);
+    }
     sendRedirect(res, '/admin');
   });
 }
