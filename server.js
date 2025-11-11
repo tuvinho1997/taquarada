@@ -1779,6 +1779,12 @@ function handleSimulacao(req, res, user) {
     { round: 38, home: 6,  away: 18 }  // Vila Nova x Volta Redonda
   ];
 
+  // Filtro para mostrar apenas jogos de times selecionados na aba de "Simulação". Somente
+  // confrontos envolvendo esses IDs de equipes serão exibidos ao usuário. Esta lista
+  // representa os IDs de Coritiba (2), Athletico‑PR (9), Remo (7), Chapecoense (4),
+  // Criciúma (10), Goiás (1) e Novorizontino (3) conforme cadastrados em teams.json.
+  const interestedTeams = new Set([2, 9, 7, 4, 10, 1, 3]);
+
   // Carrega partidas existentes para detectar quais jogos já foram disputados.
   // Consideramos um jogo disputado quando ambos os placares não são nulos.
   const existingMatches = data.matches;
@@ -1789,6 +1795,14 @@ function handleSimulacao(req, res, user) {
   // atributos e scores definidos, o confronto não deve aparecer na
   // simulação.
   const schedule = fullSchedule.filter(item => {
+    // Removemos as rodadas anteriores a 37 para mostrar apenas as duas últimas rodadas (37 e 38).
+    if (item.round < 37) {
+      return false;
+    }
+    // Se a partida não envolve nenhum dos times de interesse, ela é descartada para a simulação.
+    if (!interestedTeams.has(item.home) && !interestedTeams.has(item.away)) {
+      return false;
+    }
     const found = existingMatches.find(m => {
       return m.round === item.round && m.home_team_id === item.home && m.away_team_id === item.away;
     });
